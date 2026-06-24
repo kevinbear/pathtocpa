@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const stages = [
   {
     n: 1,
@@ -42,9 +44,24 @@ export default function Home() {
           place.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <span className="pill bg-slate-100 text-slate-600">Eligibility checker</span>
-          <span className="pill bg-slate-100 text-slate-600">Stage tracker</span>
-          <span className="pill bg-slate-100 text-slate-600">Cost planner</span>
+          <Link
+            href="/coursework"
+            className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-700"
+          >
+            Add your coursework
+          </Link>
+          <Link
+            href="/eligibility"
+            className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 transition-colors hover:bg-brand-50"
+          >
+            Check eligibility
+          </Link>
+          <Link
+            href="/journey"
+            className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+          >
+            View your journey
+          </Link>
         </div>
       </header>
 
