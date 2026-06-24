@@ -84,7 +84,8 @@ export default function ImportPanel() {
 
   function doImport() {
     const valid = validations.filter((v) => v.valid);
-    valid.forEach((v) => v.course && addCourse(v.course));
+    // Imported courses are locked by default — unlock to edit in the table.
+    valid.forEach((v) => v.course && addCourse({ ...v.course, locked: true }));
     setImportedCount(valid.length);
     reset();
   }

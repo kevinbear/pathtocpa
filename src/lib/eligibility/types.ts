@@ -17,6 +17,8 @@ export interface Course {
   term?: string;
   /** Completed courses count toward "current" eligibility; planned ones don't (unless countPlanned). */
   completed: boolean;
+  /** Imported rows are locked by default (read-only until unlocked). */
+  locked?: boolean;
 }
 
 export interface Contributor {

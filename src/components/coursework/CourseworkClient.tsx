@@ -76,19 +76,6 @@ export default function CourseworkClient() {
     resetForm();
   }
 
-  function startEdit(c: Course) {
-    setEditingId(c.id);
-    setError(null);
-    setForm({
-      name: c.name,
-      units: String(c.units),
-      unitType: c.unitType,
-      category: c.category,
-      institution: c.institution ?? "",
-      term: c.term ?? "",
-      completed: c.completed,
-    });
-  }
 
   const inputClass =
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
@@ -243,9 +230,14 @@ export default function CourseworkClient() {
             </div>
           </form>
 
-          <h2 className="mt-8 mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Your courses ({courses.length})
-          </h2>
+          <div className="mt-8 mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Your courses ({courses.length})
+            </h2>
+            <p className="text-xs text-slate-400">
+              Edit any cell directly. Imported rows are locked 🔒 — click to unlock.
+            </p>
+          </div>
 
           {!hydrated ? (
             <p className="text-sm text-slate-400">Loading…</p>
@@ -255,44 +247,122 @@ export default function CourseworkClient() {
               eligibility.
             </div>
           ) : (
-            <ul className="space-y-2">
-              {courses.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-slate-100"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-900">
-                      {c.name}
-                      {!c.completed && (
-                        <span className="pill ml-2 bg-amber-100 text-amber-700">
-                          Planned
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {c.units} {c.unitType} units · {CATEGORY_LABEL[c.category]}
-                      {c.institution ? ` · ${c.institution}` : ""}
-                      {c.term ? ` · ${c.term}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      onClick={() => startEdit(c)}
-                      className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteCourse(c.id)}
-                      className="rounded-full px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-100">
+              <table className="w-full min-w-[52rem] border-collapse text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-2 py-2 text-left">Course</th>
+                    <th className="w-16 px-2 py-2">Units</th>
+                    <th className="w-24 px-2 py-2">Type</th>
+                    <th className="w-36 px-2 py-2">Category</th>
+                    <th className="w-16 px-2 py-2">Done</th>
+                    <th className="px-2 py-2 text-left">School</th>
+                    <th className="px-2 py-2 text-left">Term</th>
+                    <th className="w-20 px-2 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.map((c) => {
+                    const locked = !!c.locked;
+                    const cls = `w-full rounded-lg border px-2 py-1 text-sm focus:outline-none ${
+                      locked
+                        ? "cursor-not-allowed border-transparent bg-transparent text-slate-500"
+                        : "border-slate-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                    }`;
+                    return (
+                      <tr key={c.id} className={locked ? "bg-slate-50/40" : "bg-white"}>
+                        <td className="px-2 py-1">
+                          <input
+                            className={cls}
+                            value={c.name}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { name: e.target.value })}
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <input
+                            className={cls}
+                            value={String(c.units)}
+                            disabled={locked}
+                            inputMode="decimal"
+                            onChange={(e) => updateCourse(c.id, { units: Number(e.target.value) || 0 })}
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <select
+                            className={cls}
+                            value={c.unitType}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { unitType: e.target.value as UnitType })}
+                          >
+                            <option value="semester">semester</option>
+                            <option value="quarter">quarter</option>
+                          </select>
+                        </td>
+                        <td className="px-2 py-1">
+                          <select
+                            className={cls}
+                            value={c.category}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { category: e.target.value as CourseCategory })}
+                          >
+                            {CATEGORIES.map((cat) => (
+                              <option key={cat.key} value={cat.key}>
+                                {cat.label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400 disabled:opacity-40"
+                            checked={c.completed}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { completed: e.target.checked })}
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <input
+                            className={cls}
+                            value={c.institution ?? ""}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { institution: e.target.value || undefined })}
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <input
+                            className={cls}
+                            value={c.term ?? ""}
+                            disabled={locked}
+                            onChange={(e) => updateCourse(c.id, { term: e.target.value || undefined })}
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => updateCourse(c.id, { locked: !locked })}
+                              title={locked ? "Unlock to edit" : "Lock row"}
+                              className="rounded-full px-2 py-1 text-xs hover:bg-slate-100"
+                            >
+                              {locked ? "🔒" : "🔓"}
+                            </button>
+                            <button
+                              onClick={() => deleteCourse(c.id)}
+                              disabled={locked}
+                              title={locked ? "Unlock to delete" : "Delete"}
+                              className="rounded-full px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-30"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
