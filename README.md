@@ -54,7 +54,7 @@ npm run test    # run unit tests (eligibility engine, added in M2)
 This project is built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for the full plan.
 
 - [x] **M1 — Scaffold** (Next.js + Tailwind, theme, landing page, docs)
-- [ ] **M2 — California rules engine + eligibility checker** (with tests)
+- [x] **M2 — California rules engine + eligibility checker** (pure engine + 11 passing tests)
 - [ ] **M3 — Coursework + eligibility UI** (local storage)
 - [ ] **M4 — Journey tracker + dashboard**
 - [ ] **M5 — Cost tracker**
