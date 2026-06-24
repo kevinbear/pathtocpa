@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import ImportPanel from "@/components/coursework/ImportPanel";
+import ProgressBar from "@/components/ProgressBar";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/eligibility/categories";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
+import californiaRuleSet from "@/lib/rules/california";
 import type { Course, CourseCategory, UnitType } from "@/lib/eligibility/types";
 
 type FormState = {
@@ -90,8 +92,17 @@ export default function CourseworkClient() {
   const inputClass =
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
+  const rules = californiaRuleSet.license;
+  const reqRows = [
+    { key: "accounting", label: "Accounting", current: round2(tally.by.accounting ?? 0), required: rules.accounting },
+    { key: "business", label: "Business-related", current: round2(tally.by.business ?? 0), required: rules.business },
+    { key: "accountingStudy", label: "Accounting study", current: round2(tally.by.accountingStudy ?? 0), required: rules.accountingStudy },
+    { key: "ethics", label: "Ethics study", current: round2(tally.by.ethics ?? 0), required: rules.ethics },
+  ];
+  const pct = (c: number, r: number) => (r === 0 ? 100 : Math.min(100, Math.round((c / r) * 100)));
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Coursework</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -103,7 +114,7 @@ export default function CourseworkClient() {
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
         {/* Left: import + form + list */}
         <div>
           <ImportPanel />
@@ -277,29 +288,62 @@ export default function CourseworkClient() {
           )}
         </div>
 
-        {/* Right: live tally */}
+        {/* Right: live requirement progress */}
         <aside className="lg:sticky lg:top-20 lg:self-start">
           <div className="card">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-              Semester unit tally
+              Requirement progress
             </h2>
-            <dl className="mt-3 space-y-2 text-sm">
-              {CATEGORIES.map((c) => (
-                <div key={c.key} className="flex justify-between">
-                  <dt className="text-slate-600">{c.label}</dt>
-                  <dd className="font-semibold text-slate-900">
-                    {round2(tally.by[c.key] ?? 0)}
-                  </dd>
+            <p className="mt-1 text-xs text-slate-400">
+              Semester units toward each California requirement.
+            </p>
+
+            <div className="mt-4 space-y-3">
+              {reqRows.map((r) => {
+                const done = r.current + 1e-6 >= r.required;
+                return (
+                  <div key={r.key}>
+                    <div className="mb-1 flex justify-between text-xs">
+                      <span className="font-medium text-slate-600">{r.label}</span>
+                      <span className="text-slate-500">
+                        {r.current} / {r.required}
+                        {done && <span className="text-brand-600"> ✓</span>}
+                      </span>
+                    </div>
+                    <ProgressBar percent={pct(r.current, r.required)} satisfied={done} />
+                  </div>
+                );
+              })}
+
+              <div className="border-t border-slate-100 pt-3">
+                <div className="mb-1 flex justify-between text-xs">
+                  <span className="font-semibold text-slate-700">Total units</span>
+                  <span className="text-slate-500">
+                    {tally.total} / {rules.totalUnits}
+                    {tally.total + 1e-6 >= rules.totalUnits && (
+                      <span className="text-brand-600"> ✓</span>
+                    )}
+                  </span>
                 </div>
-              ))}
-              <div className="flex justify-between border-t border-slate-100 pt-2">
-                <dt className="font-medium text-slate-700">Total</dt>
-                <dd className="font-bold text-brand-700">{tally.total}</dd>
+                <ProgressBar
+                  percent={pct(tally.total, rules.totalUnits)}
+                  satisfied={tally.total + 1e-6 >= rules.totalUnits}
+                />
               </div>
-            </dl>
+            </div>
+
+            {(tally.by.other ?? 0) > 0 && (
+              <div className="mt-3 flex justify-between text-xs text-slate-400">
+                <span>Other units (toward total only)</span>
+                <span className="font-semibold text-slate-600">
+                  {round2(tally.by.other ?? 0)}
+                </span>
+              </div>
+            )}
+
             <Link
               href="/eligibility"
-              className="mt-4 block rounded-full bg-brand-600 px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+              className="mt-5 block rounded-full bg-brand-600 px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-700"
             >
               Check my eligibility →
             </Link>
