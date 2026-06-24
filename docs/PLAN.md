@@ -117,11 +117,11 @@ Deploy free to Vercel. MIT licensed.
 ## Milestones
 
 1. **M1 – Scaffold** ✅ Next.js + TS + Tailwind, layout, teal tokens, landing, docs.
-2. **M2 – Engine** — CA ruleset + eligibility engine + unit tests (no UI).
-3. **M3 – Coursework + Eligibility UI** wired to local storage.
-4. **M4 – Journey tracker** + dashboard with progress rings.
-5. **M5 – Cost tracker** with CA templates.
-6. **M6 – Supabase auth + cloud sync** behind the adapter.
-7. **M7 – Polish, docs, screenshots, deploy.**
+2. **M2 – Engine** ✅ CA ruleset + eligibility engine + unit tests (no UI).
+3. **M3 – Coursework + Eligibility UI** ✅ wired to local storage (+ CSV/Excel import).
+4. **M4 – Journey tracker** ✅ dashboard with progress rings.
+5. **M5 – Cost tracker** ✅ with CA templates + CSV export.
+6. **M6 – Supabase auth + cloud sync** ✅ behind the adapter, with RLS.
+7. **M7 – Polish, docs, screenshots, deploy.** ⬜ in progress.
 
 A genuinely useful app ships at the end of **M4**.

@@ -2,71 +2,137 @@
 
 **Plan your California CPA licensure journey — eligibility, stages, and costs, all in one place.**
 
-PathToCPA is a free, open-source web app for California accounting students. It helps you:
+PathToCPA is a free, open-source web app for California accounting students. It runs
+**locally with zero setup** (your data stays in your browser), and optionally syncs to
+the cloud if you sign in.
 
-- ✅ **Check your eligibility** — enter your coursework and see whether you meet the
-  education requirements to sit for the CPA Exam and to be licensed (the 150-unit rule),
-  plus exactly what's still missing.
-- 🧭 **Track your journey** — see which of the four stages (Education → Exam →
-  Experience → Ethics & License) you're in, what to do next, and how far along you are.
-- 💰 **Budget the process** *(coming soon)* — itemize every cost (review course, exam
-  fees, transcripts, CBA application, Live Scan, certified mail, commute, and more).
+> ⚠️ **Not official advice.** This is a planning aid. Requirements and fees change —
+> always confirm with the [California Board of Accountancy (CBA)](https://www.dca.ca.gov/cba/).
 
-> ⚠️ **Not official advice.** This is a planning aid. Requirements change — always
-> confirm with the [California Board of Accountancy (CBA)](https://www.dca.ca.gov/cba/).
+---
 
-## Tech stack
+## ✨ Features
 
-- [Next.js 14](https://nextjs.org/) (App Router) + React 18 + TypeScript
-- [Tailwind CSS](https://tailwindcss.com/) for styling (teal, friendly-modern theme)
-- [Supabase](https://supabase.com/) for optional accounts + cloud sync *(added in M6)*
-- The app runs fully **local-first** — no account or backend required to use it.
+- **✅ Eligibility checker** — add your coursework and instantly see whether you meet the
+  education requirements to **sit for the CPA Exam** and to be **licensed** (the 150-unit
+  rule), with an exact list of what's still missing. Powered by a tested rules engine.
+- **🧭 Journey tracker** — see which of the four stages (Education → Exam → Experience →
+  Ethics & License) you're in, what to do next, and your **% complete** per stage and overall.
+- **💰 Cost planner** — itemize every expense (review course, exam fees, transcripts, CBA
+  application, Live Scan, PETH, certified mail, commute…), track **planned vs paid**, see a
+  spending-by-category breakdown, and **export to CSV**. Seeded with a California template.
+- **📥 CSV / Excel import** — bulk-add courses from a spreadsheet with an **editable,
+  validated preview**, downloadable templates, and an in-app tutorial. Files are parsed
+  entirely in your browser — nothing is uploaded.
+- **☁️ Optional accounts + cloud sync** — sign in (Supabase) to save your data and sync it
+  across devices. Fully optional; the app works without an account.
 
-## Getting started (run it locally)
+---
+
+## 🧰 Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| **Framework** | [Next.js 14](https://nextjs.org/) (App Router) | React framework, file-based routing, easy free hosting |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) | Type safety across the rules engine and UI |
+| **UI** | [React 18](https://react.dev/) + [Tailwind CSS 3](https://tailwindcss.com/) | Component model + a friendly, teal, responsive design system |
+| **Spreadsheet parsing** | [SheetJS](https://sheetjs.com/) (`xlsx`) | Reads CSV **and** Excel in-browser; loaded on demand |
+| **Backend (optional)** | [Supabase](https://supabase.com/) | Hosted Postgres **+ authentication**, with Row-Level Security |
+| **Testing** | [Vitest](https://vitest.dev/) | Fast unit tests for the pure engines |
+| **Hosting** | [Vercel](https://vercel.com/) | One-click deploys from GitHub |
+
+**Design principles**
+- **Local-first.** Everything works offline in `localStorage`; cloud sync is an opt-in add-on.
+- **Pure, tested engines.** Eligibility, journey, and cost logic are pure functions with no
+  UI/DB dependencies — easy to test and trust.
+- **Rules as versioned config.** California's requirements live in one auditable file with a
+  `lastVerified` date, so they're easy to update and to extend to other states later.
+- **Adapter pattern for storage.** The UI talks to one data layer; local-only and cloud-sync
+  are two implementations behind it — no rewrite to add cloud.
+
+---
+
+## 🚀 Getting started (run it locally)
 
 **Prerequisites:** [Node.js](https://nodejs.org/) 18.18+ and npm.
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/kevinbear/pathtocpa.git
+cd pathtocpa
 npm install
-
-# 2. Start the dev server
 npm run dev
-
-# 3. Open the app
-# Visit http://localhost:3000
+# open http://localhost:3000
 ```
 
-That's it — no environment variables or database needed for the local experience.
-Cloud sync (optional) is configured later via `.env.local`; see `.env.example` once M6 lands.
+That's it — **no account or database needed**. Your data saves in your browser.
 
-### Other commands
+### Optional: enable cloud sync (Supabase)
+
+1. Create a free project at [supabase.com](https://supabase.com/).
+2. In the Supabase **SQL Editor**, run [`docs/supabase-schema.sql`](docs/supabase-schema.sql)
+   to create the `user_data` table and its Row-Level Security policies.
+3. Copy `.env.example` to `.env.local` and fill in your **Project URL** and **Publishable key**
+   (Supabase dashboard → Connect):
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+   ```
+4. Restart `npm run dev`. A **Sign in** button appears in the nav.
+
+---
+
+## 📜 Scripts
 
 ```bash
+npm run dev     # start the dev server
 npm run build   # production build
 npm run start   # run the production build
 npm run lint    # lint
-npm run test    # run unit tests (eligibility engine, added in M2)
+npm run test    # run the unit tests (Vitest)
 ```
 
-## Project status
+---
 
-This project is built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for the full plan.
+## 🗂️ Project structure
 
-- [x] **M1 — Scaffold** (Next.js + Tailwind, theme, landing page, docs)
-- [x] **M2 — California rules engine + eligibility checker** (pure engine + 11 passing tests)
-- [x] **M3 — Coursework + eligibility UI** (add/edit/delete courses, live tally, real verdicts; saved in your browser)
-- [x] **CSV / Excel import** (upload a spreadsheet, editable validated preview, downloadable templates, in-app tutorial)
-- [x] **M4 — Journey tracker + dashboard** (overall + per-stage progress rings, current stage, next step, editable 4-stage timeline)
-- [x] **M5 — Cost tracker** (itemized expenses, planned-vs-paid totals, California starter template, CSV export)
-- [x] **M6 — Accounts + cloud sync (Supabase)** (email/password auth, per-user data synced to Postgres with Row-Level Security; local-only still works without config)
-- [ ] **M7 — Polish + deploy**
+```
+src/
+├─ app/                    # routes (App Router): dashboard, coursework, eligibility, journey, costs, about
+├─ components/             # UI components (per feature) + shared (ProgressRing, ProgressBar, Nav, AuthMenu)
+└─ lib/
+   ├─ rules/california.ts  # California requirements as versioned config (the source of truth)
+   ├─ eligibility/         # pure eligibility engine + tests
+   ├─ journey/             # pure four-stage journey engine + tests
+   ├─ costs/               # cost summary engine, CA template, CSV export + tests
+   ├─ import/              # CSV/Excel parsing + validation + tests
+   └─ data/                # local-first store, Supabase client, sync logic
+docs/                      # PLAN.md, ARCHITECTURE.md, supabase-schema.sql
+```
 
-## Contributing
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the pieces fit together.
 
-Contributions are welcome — especially help keeping the California rules accurate and
-(eventually) adding other states. See [`docs/PLAN.md`](docs/PLAN.md) for architecture.
+---
 
-## License
+## 🧭 Project status
+
+Built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for the full plan.
+
+- [x] **M1 — Scaffold** (Next.js + Tailwind, theme, docs)
+- [x] **M2 — California rules engine + eligibility checker** (pure engine + tests)
+- [x] **M3 — Coursework + eligibility UI** (local storage)
+- [x] **CSV / Excel import** (validated preview, templates, tutorial)
+- [x] **M4 — Journey tracker + dashboard** (progress rings, stage tracking)
+- [x] **M5 — Cost tracker** (planned-vs-paid, CA template, CSV export)
+- [x] **M6 — Accounts + cloud sync** (Supabase auth + per-user data with RLS)
+- [ ] **M7 — Polish + deploy** (public URL on Vercel)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome — especially keeping the California rules accurate and (eventually)
+adding other states. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## 📄 License
 
 [MIT](LICENSE) — free to use, run locally, and build on.
