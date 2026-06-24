@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AuthMenu from "@/components/AuthMenu";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 const links = [
   { href: "/", label: "Home" },
@@ -42,6 +43,7 @@ export default function Nav() {
               </li>
             ))}
           </ul>
+          <ThemeSwitcher />
           <AuthMenu />
         </div>
       </nav>
