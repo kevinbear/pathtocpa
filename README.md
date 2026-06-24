@@ -55,7 +55,7 @@ This project is built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for t
 
 - [x] **M1 — Scaffold** (Next.js + Tailwind, theme, landing page, docs)
 - [x] **M2 — California rules engine + eligibility checker** (pure engine + 11 passing tests)
-- [ ] **M3 — Coursework + eligibility UI** (local storage)
+- [x] **M3 — Coursework + eligibility UI** (add/edit/delete courses, live tally, real verdicts; saved in your browser)
 - [ ] **M4 — Journey tracker + dashboard**
 - [ ] **M5 — Cost tracker**
 - [ ] **M6 — Accounts + cloud sync (Supabase)**
