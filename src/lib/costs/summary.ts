@@ -1,4 +1,4 @@
-import type { Expense, ExpenseCategory } from "./types";
+import { amountPaid, type Expense, type ExpenseCategory } from "./types";
 
 export interface CategorySummary {
   total: number;
@@ -27,13 +27,14 @@ export function summarize(expenses: Expense[]): CostSummary {
 
   for (const e of expenses) {
     const amount = Number.isFinite(e.amount) ? e.amount : 0;
+    const paidSoFar = amountPaid(e);
     total += amount;
-    if (e.status === "paid") paid += amount;
+    paid += paidSoFar;
 
     const bucket = byCategory[e.category] ?? { total: 0, paid: 0, planned: 0 };
     bucket.total += amount;
-    if (e.status === "paid") bucket.paid += amount;
-    else bucket.planned += amount;
+    bucket.paid += paidSoFar;
+    bucket.planned += amount - paidSoFar;
     byCategory[e.category] = bucket;
   }
 

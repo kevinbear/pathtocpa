@@ -42,6 +42,45 @@ describe("summarize", () => {
   });
 });
 
+describe("summarize — installments", () => {
+  it("counts partial installment payments as paid", () => {
+    const s = summarize([
+      {
+        id: "i1",
+        label: "Review course",
+        category: "review",
+        amount: 2000,
+        status: "planned",
+        paymentMethod: "installment",
+        installmentsTotal: 4,
+        installmentsPaid: 1,
+      },
+    ]);
+    expect(s.total).toBe(2000);
+    expect(s.paid).toBe(500); // 1 of 4 installments
+    expect(s.planned).toBe(1500);
+    expect(s.paidPercent).toBe(25);
+    expect(s.byCategory.review).toEqual({ total: 2000, paid: 500, planned: 1500 });
+  });
+
+  it("treats a fully-paid installment plan as 100%", () => {
+    const s = summarize([
+      {
+        id: "i2",
+        label: "Plan",
+        category: "exam",
+        amount: 1000,
+        status: "planned",
+        paymentMethod: "installment",
+        installmentsTotal: 5,
+        installmentsPaid: 5,
+      },
+    ]);
+    expect(s.paid).toBe(1000);
+    expect(s.paidPercent).toBe(100);
+  });
+});
+
 describe("formatUSD", () => {
   it("formats with thousands separators and cents", () => {
     expect(formatUSD(2000)).toBe("$2,000.00");

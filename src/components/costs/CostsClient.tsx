@@ -7,7 +7,14 @@ import { summarize, formatUSD } from "@/lib/costs/summary";
 import { CA_COST_TEMPLATE } from "@/lib/costs/template";
 import { exportExpensesCsv } from "@/lib/costs/export";
 import ProgressBar from "@/components/ProgressBar";
-import type { Expense, ExpenseCategory, ExpenseStatus } from "@/lib/costs/types";
+import {
+  amountPaid,
+  percentPaid,
+  type Expense,
+  type ExpenseCategory,
+  type ExpenseStatus,
+  type PaymentMethod,
+} from "@/lib/costs/types";
 
 type FormState = {
   label: string;
@@ -15,6 +22,9 @@ type FormState = {
   amount: string;
   status: ExpenseStatus;
   notes: string;
+  paymentMethod: PaymentMethod;
+  installmentsTotal: string;
+  installmentsPaid: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -23,6 +33,9 @@ const EMPTY_FORM: FormState = {
   amount: "",
   status: "planned",
   notes: "",
+  paymentMethod: "full",
+  installmentsTotal: "4",
+  installmentsPaid: "0",
 };
 
 export default function CostsClient() {
@@ -57,12 +70,19 @@ export default function CostsClient() {
     if (!Number.isFinite(amount) || amount < 0)
       return setError("Amount must be 0 or greater.");
 
+    const isInstallment = form.paymentMethod === "installment";
+    const total = Math.max(1, Math.floor(Number(form.installmentsTotal) || 1));
+    const paidCount = Math.min(total, Math.max(0, Math.floor(Number(form.installmentsPaid) || 0)));
+
     const payload: Omit<Expense, "id"> = {
       label: form.label.trim(),
       category: form.category,
       amount,
-      status: form.status,
+      status: isInstallment ? (paidCount >= total ? "paid" : "planned") : form.status,
       notes: form.notes.trim() || undefined,
+      paymentMethod: form.paymentMethod,
+      installmentsTotal: isInstallment ? total : undefined,
+      installmentsPaid: isInstallment ? paidCount : undefined,
     };
     if (editingId) updateExpense(editingId, payload);
     else addExpense(payload);
@@ -78,11 +98,24 @@ export default function CostsClient() {
       amount: String(e.amount),
       status: e.status,
       notes: e.notes ?? "",
+      paymentMethod: e.paymentMethod ?? "full",
+      installmentsTotal: String(e.installmentsTotal ?? 4),
+      installmentsPaid: String(e.installmentsPaid ?? 0),
     });
   }
 
   function toggleStatus(e: Expense) {
     updateExpense(e.id, { status: e.status === "paid" ? "planned" : "paid" });
+  }
+
+  /** Bump installments paid up/down for a quick interaction on the row. */
+  function adjustInstallment(e: Expense, delta: number) {
+    const total = e.installmentsTotal ?? 1;
+    const next = Math.min(total, Math.max(0, (e.installmentsPaid ?? 0) + delta));
+    updateExpense(e.id, {
+      installmentsPaid: next,
+      status: next >= total ? "paid" : "planned",
+    });
   }
 
   return (
@@ -200,19 +233,59 @@ export default function CostsClient() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Status</span>
+                <span className="mb-1 block font-medium text-slate-700">Payment method</span>
                 <select
                   className={inputClass}
-                  value={form.status}
+                  value={form.paymentMethod}
                   onChange={(e) =>
-                    setForm({ ...form, status: e.target.value as ExpenseStatus })
+                    setForm({ ...form, paymentMethod: e.target.value as PaymentMethod })
                   }
                 >
-                  <option value="planned">Planned</option>
-                  <option value="paid">Paid</option>
+                  <option value="full">Pay in full</option>
+                  <option value="installment">Installments</option>
                 </select>
               </label>
-              <label className="block text-sm">
+
+              {form.paymentMethod === "full" ? (
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Status</span>
+                  <select
+                    className={inputClass}
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value as ExpenseStatus })
+                    }
+                  >
+                    <option value="planned">Planned</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </label>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-sm">
+                    <span className="mb-1 block font-medium text-slate-700">Paid</span>
+                    <input
+                      className={inputClass}
+                      value={form.installmentsPaid}
+                      onChange={(e) => setForm({ ...form, installmentsPaid: e.target.value })}
+                      inputMode="numeric"
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block font-medium text-slate-700">of total</span>
+                    <input
+                      className={inputClass}
+                      value={form.installmentsTotal}
+                      onChange={(e) => setForm({ ...form, installmentsTotal: e.target.value })}
+                      inputMode="numeric"
+                      placeholder="4"
+                    />
+                  </label>
+                </div>
+              )}
+
+              <label className="sm:col-span-2 block text-sm">
                 <span className="mb-1 block font-medium text-slate-700">
                   Notes <span className="text-slate-400">(optional)</span>
                 </span>
@@ -283,47 +356,84 @@ export default function CostsClient() {
             </div>
           ) : (
             <ul className="space-y-2">
-              {expenses.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-slate-100"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-900">{e.label}</p>
-                    <p className="text-xs text-slate-500">
-                      {EXPENSE_CATEGORY_LABEL[e.category]}
-                      {e.notes ? ` · ${e.notes}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-semibold text-slate-900">
-                      {formatUSD(e.amount)}
-                    </span>
-                    <button
-                      onClick={() => toggleStatus(e)}
-                      className={`pill ${
-                        e.status === "paid"
-                          ? "bg-brand-100 text-brand-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {e.status === "paid" ? "✓ Paid" : "Planned"}
-                    </button>
-                    <button
-                      onClick={() => startEdit(e)}
-                      className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteExpense(e.id)}
-                      className="rounded-full px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
+              {expenses.map((e) => {
+                const isInstallment = e.paymentMethod === "installment" && !!e.installmentsTotal;
+                return (
+                  <li
+                    key={e.id}
+                    className="rounded-2xl bg-white p-4 shadow-soft ring-1 ring-slate-100"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-900">{e.label}</p>
+                        <p className="text-xs text-slate-500">
+                          {EXPENSE_CATEGORY_LABEL[e.category]}
+                          {e.notes ? ` · ${e.notes}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className="font-semibold text-slate-900">
+                          {formatUSD(e.amount)}
+                        </span>
+                        {isInstallment ? (
+                          <span className="pill bg-slate-100 text-slate-600">Installments</span>
+                        ) : (
+                          <button
+                            onClick={() => toggleStatus(e)}
+                            className={`pill ${
+                              e.status === "paid"
+                                ? "bg-brand-100 text-brand-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {e.status === "paid" ? "✓ Paid" : "Planned"}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => startEdit(e)}
+                          className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteExpense(e.id)}
+                          className="rounded-full px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    {isInstallment && (
+                      <div className="mt-3">
+                        <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <span className="text-slate-500">
+                            {e.installmentsPaid ?? 0} / {e.installmentsTotal} installments ·{" "}
+                            <span className="font-semibold text-brand-700">{percentPaid(e)}% paid</span>{" "}
+                            · {formatUSD(amountPaid(e))} of {formatUSD(e.amount)}
+                          </span>
+                          <span className="flex gap-1">
+                            <button
+                              onClick={() => adjustInstallment(e, -1)}
+                              className="rounded-full px-2 py-0.5 font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+                              aria-label="One fewer installment paid"
+                            >
+                              −
+                            </button>
+                            <button
+                              onClick={() => adjustInstallment(e, 1)}
+                              className="rounded-full bg-brand-600 px-2 py-0.5 font-medium text-white hover:bg-brand-700"
+                            >
+                              + mark paid
+                            </button>
+                          </span>
+                        </div>
+                        <ProgressBar percent={percentPaid(e)} satisfied={percentPaid(e) === 100} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
