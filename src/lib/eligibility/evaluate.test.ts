@@ -129,6 +129,63 @@ describe("evaluate — license eligibility", () => {
   });
 });
 
+describe("evaluate — accounting → business overflow", () => {
+  it("counts accounting units beyond 24 toward the business requirement", () => {
+    // 48 accounting, 0 business → 24 overflow satisfies the 24 business requirement.
+    const r = evaluate(
+      { courses: [course("accounting", 48)], hasBachelorsDegree: true },
+      CA,
+    );
+    const business = r.exam.categories.find((c) => c.key === "business")!;
+    expect(business.completed).toBe(24);
+    expect(business.overflow).toBe(24);
+    expect(r.exam.eligible).toBe(true);
+  });
+
+  it("does not overflow when accounting is at or below 24", () => {
+    const r = evaluate(
+      { courses: [course("accounting", 24), course("business", 10)], hasBachelorsDegree: true },
+      CA,
+    );
+    const business = r.exam.categories.find((c) => c.key === "business")!;
+    expect(business.completed).toBe(10);
+    expect(business.overflow).toBeUndefined();
+  });
+});
+
+describe("evaluate — accounting study waiver", () => {
+  it("waives the accounting study requirement for a qualifying master's", () => {
+    const r = evaluate(
+      {
+        courses: [course("accounting", 24), course("business", 24), course("ethics", 10), course("other", 92)],
+        hasBachelorsDegree: true,
+        waivesAccountingStudy: true,
+      },
+      CA,
+    );
+    const study = r.license.categories.find((c) => c.key === "accountingStudy")!;
+    expect(study.satisfied).toBe(true);
+    expect(study.waived).toBe(true);
+    expect(r.license.eligible).toBe(true);
+    expect(r.license.missing).not.toContain(
+      "20 more accounting study units needed (have 0 of 20).",
+    );
+  });
+
+  it("still requires accounting study without the waiver", () => {
+    const r = evaluate(
+      {
+        courses: [course("accounting", 24), course("business", 24), course("ethics", 10), course("other", 92)],
+        hasBachelorsDegree: true,
+      },
+      CA,
+    );
+    const study = r.license.categories.find((c) => c.key === "accountingStudy")!;
+    expect(study.satisfied).toBe(false);
+    expect(r.license.eligible).toBe(false);
+  });
+});
+
 describe("evaluate — quarter units & options", () => {
   it("counts converted quarter units toward requirements", () => {
     const r = evaluate(

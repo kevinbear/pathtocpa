@@ -57,8 +57,15 @@ function newId(): string {
 
 /** Merge stored/cloud data with defaults so missing fields never break the app. */
 function normalize(parsed: Partial<AppData> | null | undefined): AppData {
+  const rawProfile = (parsed?.profile ?? {}) as Record<string, unknown>;
+  // Migrate legacy `hasBachelorsDegree` boolean → `degreeLevel`.
+  const degreeLevel =
+    (rawProfile.degreeLevel as Profile["degreeLevel"]) ??
+    (rawProfile.hasBachelorsDegree ? "bachelors" : "none");
+  const profile: Profile = { ...DEFAULT_APP_DATA.profile, ...rawProfile, degreeLevel };
+  delete (profile as unknown as Record<string, unknown>).hasBachelorsDegree;
   return {
-    profile: { ...DEFAULT_APP_DATA.profile, ...(parsed?.profile ?? {}) },
+    profile,
     courses: Array.isArray(parsed?.courses) ? parsed!.courses! : [],
     expenses: Array.isArray(parsed?.expenses) ? parsed!.expenses! : [],
   };

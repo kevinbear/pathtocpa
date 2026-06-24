@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
+import { profileHasBachelors, profileWaivesAccountingStudy } from "@/lib/data/types";
 import { evaluate } from "@/lib/eligibility/evaluate";
 import californiaRuleSet from "@/lib/rules/california";
 import type { Verdict } from "@/lib/eligibility/types";
 import ProgressBar from "@/components/ProgressBar";
+import DegreeFields from "@/components/DegreeFields";
 
 function VerdictCard({ title, subtitle, verdict }: { title: string; subtitle: string; verdict: Verdict }) {
   return (
@@ -64,17 +66,21 @@ function VerdictCard({ title, subtitle, verdict }: { title: string; subtitle: st
 }
 
 export default function EligibilityClient() {
-  const { hydrated, courses, profile, setProfile } = useAppData();
+  const { hydrated, courses, profile } = useAppData();
   const [countPlanned, setCountPlanned] = useState(false);
 
   const result = useMemo(
     () =>
       evaluate(
-        { courses, hasBachelorsDegree: profile.hasBachelorsDegree },
+        {
+          courses,
+          hasBachelorsDegree: profileHasBachelors(profile),
+          waivesAccountingStudy: profileWaivesAccountingStudy(profile),
+        },
         californiaRuleSet,
         { countPlanned },
       ),
-    [courses, profile.hasBachelorsDegree, countPlanned],
+    [courses, profile, countPlanned],
   );
 
   return (
@@ -107,17 +113,9 @@ export default function EligibilityClient() {
       ) : (
         <>
           {/* Controls */}
-          <div className="card mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
-                checked={profile.hasBachelorsDegree}
-                onChange={(e) => setProfile({ hasBachelorsDegree: e.target.checked })}
-              />
-              I have (or will have) a bachelor&apos;s degree
-            </label>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <div className="card mb-6 space-y-4">
+            <DegreeFields />
+            <label className="flex items-center gap-2 border-t border-slate-100 pt-4 text-sm font-medium text-slate-700">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
@@ -126,6 +124,15 @@ export default function EligibilityClient() {
               />
               Include planned courses (projection)
             </label>
+          </div>
+
+          <div className="mb-6 flex justify-end">
+            <Link
+              href="/eligibility/breakdown"
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+            >
+              See full breakdown →
+            </Link>
           </div>
 
           <p className="mb-4 text-sm text-slate-500">

@@ -19,6 +19,12 @@ export interface Course {
   completed: boolean;
 }
 
+export interface Contributor {
+  name: string;
+  units: number;
+  note?: string;
+}
+
 /** Progress toward a single requirement, all in semester units. */
 export interface CategoryProgress {
   key: CourseCategory | "total";
@@ -29,6 +35,17 @@ export interface CategoryProgress {
   satisfied: boolean;
   /** 0–100, capped. */
   percent: number;
+  // --- Detail for the breakdown page (optional) ---
+  /** Units that came from courses directly in this category. */
+  direct?: number;
+  /** Units credited from another category (e.g. accounting overflow → business). */
+  overflow?: number;
+  overflowNote?: string;
+  /** True if this requirement was satisfied by a degree waiver rather than units. */
+  waived?: boolean;
+  waivedNote?: string;
+  /** Courses (and synthetic entries) that counted toward this requirement. */
+  contributors?: Contributor[];
 }
 
 export interface Verdict {
@@ -41,6 +58,8 @@ export interface Verdict {
 export interface EligibilityInput {
   courses: Course[];
   hasBachelorsDegree: boolean;
+  /** When true, the 20-unit Accounting Study requirement is waived (qualifying master's). */
+  waivesAccountingStudy?: boolean;
 }
 
 export interface EligibilityResult {

@@ -6,7 +6,7 @@ import type { Course } from "../eligibility/types";
 
 function profile(overrides: Partial<Profile> = {}): Profile {
   return {
-    hasBachelorsDegree: false,
+    degreeLevel: "none",
     examSectionsPassed: [],
     experienceMonths: 0,
     pethPassed: false,
@@ -49,7 +49,7 @@ describe("computeJourney", () => {
 
   it("marks education done once licensure education is met", () => {
     const j = computeJourney(
-      { courses: licensedCourses(), profile: profile({ hasBachelorsDegree: true }) },
+      { courses: licensedCourses(), profile: profile({ degreeLevel: "bachelors" }) },
       CA,
     );
     const edu = j.stages.find((s) => s.key === "education")!;
@@ -84,7 +84,7 @@ describe("computeJourney", () => {
       {
         courses: licensedCourses(),
         profile: profile({
-          hasBachelorsDegree: true,
+          degreeLevel: "bachelors",
           examSectionsPassed: ["AUD", "FAR", "REG", "DISC"],
           experienceMonths: 12,
           pethPassed: true,

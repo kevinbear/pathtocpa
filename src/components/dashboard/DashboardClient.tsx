@@ -39,7 +39,7 @@ export default function DashboardClient() {
 
   const hasData =
     courses.length > 0 ||
-    profile.hasBachelorsDegree ||
+    profile.degreeLevel !== "none" ||
     profile.examSectionsPassed.length > 0 ||
     profile.experienceMonths > 0 ||
     profile.pethPassed ||

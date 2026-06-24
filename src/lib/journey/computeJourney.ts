@@ -1,6 +1,11 @@
 import { evaluate } from "../eligibility/evaluate";
 import type { EvaluateOptions, Course } from "../eligibility/types";
-import type { Profile, ExamSection } from "../data/types";
+import {
+  profileHasBachelors,
+  profileWaivesAccountingStudy,
+  type Profile,
+  type ExamSection,
+} from "../data/types";
 import type { RuleSet } from "../rules/types";
 
 export type StageStatus = "not_started" | "in_progress" | "done";
@@ -68,12 +73,17 @@ export function computeJourney(
   const { profile } = input;
 
   // --- Stage 1: Education (from the eligibility engine) ---
+  const hasBachelors = profileHasBachelors(profile);
   const elig = evaluate(
-    { courses: input.courses, hasBachelorsDegree: profile.hasBachelorsDegree },
+    {
+      courses: input.courses,
+      hasBachelorsDegree: hasBachelors,
+      waivesAccountingStudy: profileWaivesAccountingStudy(profile),
+    },
     ruleSet,
     options,
   );
-  const bachelorPct = profile.hasBachelorsDegree ? 100 : 0;
+  const bachelorPct = hasBachelors ? 100 : 0;
   const educationPercent = elig.license.eligible
     ? 100
     : round(mean([bachelorPct, ...elig.license.categories.map((c) => c.percent)]));

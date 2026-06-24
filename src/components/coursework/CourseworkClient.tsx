@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
+import { profileWaivesAccountingStudy } from "@/lib/data/types";
 import ImportPanel from "@/components/coursework/ImportPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/eligibility/categories";
@@ -31,7 +32,7 @@ const EMPTY_FORM: FormState = {
 };
 
 export default function CourseworkClient() {
-  const { hydrated, courses, addCourse, updateCourse, deleteCourse } = useAppData();
+  const { hydrated, courses, profile, addCourse, updateCourse, deleteCourse } = useAppData();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,10 +94,17 @@ export default function CourseworkClient() {
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
   const rules = californiaRuleSet.license;
+  const waived = profileWaivesAccountingStudy(profile);
+  const overflow = Math.max(0, round2((tally.by.accounting ?? 0) - rules.accounting));
   const reqRows = [
     { key: "accounting", label: "Accounting", current: round2(tally.by.accounting ?? 0), required: rules.accounting },
-    { key: "business", label: "Business-related", current: round2(tally.by.business ?? 0), required: rules.business },
-    { key: "accountingStudy", label: "Accounting study", current: round2(tally.by.accountingStudy ?? 0), required: rules.accountingStudy },
+    { key: "business", label: "Business-related", current: round2((tally.by.business ?? 0) + overflow), required: rules.business },
+    {
+      key: "accountingStudy",
+      label: waived ? "Accounting study (waived)" : "Accounting study",
+      current: waived ? rules.accountingStudy : round2(tally.by.accountingStudy ?? 0),
+      required: rules.accountingStudy,
+    },
     { key: "ethics", label: "Ethics study", current: round2(tally.by.ethics ?? 0), required: rules.ethics },
   ];
   const pct = (c: number, r: number) => (r === 0 ? 100 : Math.min(100, Math.round((c / r) * 100)));
