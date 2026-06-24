@@ -58,7 +58,7 @@ This project is built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for t
 - [x] **M3 — Coursework + eligibility UI** (add/edit/delete courses, live tally, real verdicts; saved in your browser)
 - [x] **CSV / Excel import** (upload a spreadsheet, editable validated preview, downloadable templates, in-app tutorial)
 - [x] **M4 — Journey tracker + dashboard** (overall + per-stage progress rings, current stage, next step, editable 4-stage timeline)
-- [ ] **M5 — Cost tracker**
+- [x] **M5 — Cost tracker** (itemized expenses, planned-vs-paid totals, California starter template, CSV export)
 - [ ] **M6 — Accounts + cloud sync (Supabase)**
 - [ ] **M7 — Polish + deploy**
 

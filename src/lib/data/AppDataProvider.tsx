@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import type { Course } from "../eligibility/types";
+import type { Expense } from "../costs/types";
 import { AppData, DEFAULT_APP_DATA, Profile, STORAGE_KEY } from "./types";
 
 interface AppDataContextValue {
@@ -16,10 +17,15 @@ interface AppDataContextValue {
   hydrated: boolean;
   profile: Profile;
   courses: Course[];
+  expenses: Expense[];
   setProfile: (patch: Partial<Profile>) => void;
   addCourse: (course: Omit<Course, "id">) => void;
   updateCourse: (id: string, patch: Partial<Omit<Course, "id">>) => void;
   deleteCourse: (id: string) => void;
+  addExpense: (expense: Omit<Expense, "id">) => void;
+  addExpenses: (expenses: Omit<Expense, "id">[]) => void;
+  updateExpense: (id: string, patch: Partial<Omit<Expense, "id">>) => void;
+  deleteExpense: (id: string) => void;
   clearAll: () => void;
 }
 
@@ -45,6 +51,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         setData({
           profile: { ...DEFAULT_APP_DATA.profile, ...parsed.profile },
           courses: Array.isArray(parsed.courses) ? parsed.courses : [],
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
         });
       }
     } catch {
@@ -85,6 +92,31 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setData((d) => ({ ...d, courses: d.courses.filter((c) => c.id !== id) }));
   }, []);
 
+  const addExpense = useCallback((expense: Omit<Expense, "id">) => {
+    setData((d) => ({ ...d, expenses: [...d.expenses, { ...expense, id: newId() }] }));
+  }, []);
+
+  const addExpenses = useCallback((expenses: Omit<Expense, "id">[]) => {
+    setData((d) => ({
+      ...d,
+      expenses: [...d.expenses, ...expenses.map((e) => ({ ...e, id: newId() }))],
+    }));
+  }, []);
+
+  const updateExpense = useCallback(
+    (id: string, patch: Partial<Omit<Expense, "id">>) => {
+      setData((d) => ({
+        ...d,
+        expenses: d.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      }));
+    },
+    [],
+  );
+
+  const deleteExpense = useCallback((id: string) => {
+    setData((d) => ({ ...d, expenses: d.expenses.filter((e) => e.id !== id) }));
+  }, []);
+
   const clearAll = useCallback(() => setData(DEFAULT_APP_DATA), []);
 
   const value = useMemo<AppDataContextValue>(
@@ -92,13 +124,30 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       hydrated,
       profile: data.profile,
       courses: data.courses,
+      expenses: data.expenses,
       setProfile,
       addCourse,
       updateCourse,
       deleteCourse,
+      addExpense,
+      addExpenses,
+      updateExpense,
+      deleteExpense,
       clearAll,
     }),
-    [hydrated, data, setProfile, addCourse, updateCourse, deleteCourse, clearAll],
+    [
+      hydrated,
+      data,
+      setProfile,
+      addCourse,
+      updateCourse,
+      deleteCourse,
+      addExpense,
+      addExpenses,
+      updateExpense,
+      deleteExpense,
+      clearAll,
+    ],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

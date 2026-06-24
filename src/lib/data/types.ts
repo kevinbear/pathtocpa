@@ -1,4 +1,5 @@
 import type { Course } from "../eligibility/types";
+import type { Expense } from "../costs/types";
 
 /** CPA Exam sections under the CPA Evolution model: 3 Core + 1 Discipline. */
 export type ExamSection = "AUD" | "FAR" | "REG" | "DISC";
@@ -25,6 +26,7 @@ export interface Profile {
 export interface AppData {
   profile: Profile;
   courses: Course[];
+  expenses: Expense[];
 }
 
 export const DEFAULT_APP_DATA: AppData = {
@@ -36,6 +38,7 @@ export const DEFAULT_APP_DATA: AppData = {
     licenseSubmitted: false,
   },
   courses: [],
+  expenses: [],
 };
 
 /** Storage key namespace — bump the version suffix on breaking shape changes. */
