@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AuthMenu from "@/components/AuthMenu";
 
 const links = [
   { href: "/", label: "Home" },
@@ -24,22 +25,25 @@ export default function Nav() {
         <Link href="/" className="text-lg font-bold tracking-tight text-slate-900">
           Path<span className="text-brand-600">To</span>CPA
         </Link>
-        <ul className="flex items-center gap-1 text-sm">
-          {links.slice(1).map((l) => (
-            <li key={l.href}>
-              <Link
-                href={l.href}
-                className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-                  isActive(l.href)
-                    ? "bg-brand-100 text-brand-800"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-2">
+          <ul className="flex items-center gap-1 text-sm">
+            {links.slice(1).map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
+                    isActive(l.href)
+                      ? "bg-brand-100 text-brand-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <AuthMenu />
+        </div>
       </nav>
     </header>
   );

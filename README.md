@@ -59,7 +59,7 @@ This project is built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for t
 - [x] **CSV / Excel import** (upload a spreadsheet, editable validated preview, downloadable templates, in-app tutorial)
 - [x] **M4 — Journey tracker + dashboard** (overall + per-stage progress rings, current stage, next step, editable 4-stage timeline)
 - [x] **M5 — Cost tracker** (itemized expenses, planned-vs-paid totals, California starter template, CSV export)
-- [ ] **M6 — Accounts + cloud sync (Supabase)**
+- [x] **M6 — Accounts + cloud sync (Supabase)** (email/password auth, per-user data synced to Postgres with Row-Level Security; local-only still works without config)
 - [ ] **M7 — Polish + deploy**
 
 ## Contributing
