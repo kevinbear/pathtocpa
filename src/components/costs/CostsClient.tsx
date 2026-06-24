@@ -86,7 +86,7 @@ export default function CostsClient() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-6 py-12">
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Costs</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -157,8 +157,9 @@ export default function CostsClient() {
             </button>
           </div>
 
-          {/* Add / edit form */}
-          <form onSubmit={handleSubmit} className="card mb-8">
+          {/* Add / edit form + breakdown */}
+          <div className="mb-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
+          <form onSubmit={handleSubmit} className="card">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
               {editingId ? "Edit expense" : "Add an expense"}
             </h2>
@@ -241,6 +242,38 @@ export default function CostsClient() {
               )}
             </div>
           </form>
+
+          <aside className="lg:sticky lg:top-20 lg:self-start">
+            <div className="card">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
+                Spending by category
+              </h2>
+              {expenses.length === 0 ? (
+                <p className="mt-3 text-xs text-slate-400">
+                  Add expenses to see a breakdown.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {EXPENSE_CATEGORIES.filter(
+                    (c) => (summary.byCategory[c.key]?.total ?? 0) > 0,
+                  ).map((c) => {
+                    const b = summary.byCategory[c.key];
+                    const paidPct = b.total === 0 ? 0 : Math.round((b.paid / b.total) * 100);
+                    return (
+                      <div key={c.key}>
+                        <div className="mb-1 flex justify-between text-xs">
+                          <span className="font-medium text-slate-600">{c.label}</span>
+                          <span className="text-slate-500">{formatUSD(b.total)}</span>
+                        </div>
+                        <ProgressBar percent={paidPct} satisfied={paidPct === 100} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </aside>
+          </div>
 
           {/* List */}
           {expenses.length === 0 ? (
