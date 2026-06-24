@@ -26,6 +26,13 @@ the cloud if you sign in.
   entirely in your browser — nothing is uploaded.
 - **☁️ Optional accounts + cloud sync** — sign in (Supabase) to save your data and sync it
   across devices. Fully optional; the app works without an account.
+- **📊 Interactive requirement breakdown** — a "size chart" showing exactly what counts in
+  each category, what you've used, and what's left, with the flyer's accepted-subject lists.
+- **🎓 Degree-aware rules** — a master's in Accounting/Taxation/Laws-in-Taxation waives the
+  Accounting Study requirement; accounting units beyond 24 count toward business-related.
+- **📚 Editable coursework table** — edit any cell inline; imported rows lock by default.
+- **🧭 Step-by-step CBA guides** — transcripts, exam application, Live Scan, PETH, and more.
+- **🎨 Color themes** — pick teal, indigo, violet, emerald, or rose.
 
 ---
 
@@ -125,6 +132,8 @@ Built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for the full plan.
 - [x] **M5 — Cost tracker** (planned-vs-paid, CA template, CSV export)
 - [x] **M6 — Accounts + cloud sync** (Supabase auth + per-user data with RLS)
 - [ ] **M7 — Polish + deploy** (public URL on Vercel)
+
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full list of shipped features and what's next.
 
 ---
 
