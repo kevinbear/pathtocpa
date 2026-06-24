@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
+import ImportPanel from "@/components/coursework/ImportPanel";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/eligibility/categories";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
 import type { Course, CourseCategory, UnitType } from "@/lib/eligibility/types";
@@ -103,8 +104,10 @@ export default function CourseworkClient() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
-        {/* Left: form + list */}
+        {/* Left: import + form + list */}
         <div>
+          <ImportPanel />
+
           <form onSubmit={handleSubmit} className="card">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
               {editingId ? "Edit course" : "Add a course"}
