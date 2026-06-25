@@ -11,6 +11,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useAppData } from "@/lib/data/AppDataProvider";
@@ -116,23 +117,33 @@ function DropZone({
   id,
   courses,
   expectedCategory,
+  invalid = false,
   className = "",
   children,
 }: {
   id: string;
   courses: Course[];
   expectedCategory?: AllocCategory;
+  invalid?: boolean;
   className?: string;
   children?: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const border = invalid
+    ? "border-red-400 bg-red-50"
+    : isOver
+      ? "border-brand-400 bg-brand-50"
+      : "border-slate-200";
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-xl border-2 border-dashed p-2 transition-colors ${
-        isOver ? "border-brand-400 bg-brand-50" : "border-slate-200"
-      } ${className}`}
+      className={`rounded-xl border-2 border-dashed p-2 transition-colors ${border} ${className}`}
     >
+      {invalid && (
+        <p className="mb-1 flex items-center gap-1 text-xs font-semibold text-red-600">
+          🚫 Can&apos;t drop here
+        </p>
+      )}
       {children}
       <div className="flex flex-wrap gap-1.5">
         {courses.map((c) => (
@@ -229,6 +240,8 @@ export default function AllocateClient() {
   const { hydrated, courses, profile, updateCourse } = useAppData();
   const accountingStudyWaived = profileWaivesAccountingStudy(profile);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [dropError, setDropError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showCode, setShowCode] = useState(false);
@@ -264,12 +277,14 @@ export default function AllocateClient() {
     });
   }
 
-  function applyMove(ids: string[], zone: string) {
+  /** Is moving these courses into `zone` allowed? Returns a reason if not. */
+  function validateDrop(ids: string[], zone: string): { ok: boolean; reason?: string } {
+    if (zone === POOL_ID) return { ok: true };
     const t = targetFor(zone);
-    if (!t) return;
+    if (!t) return { ok: true };
     const moved = ids.map((id) => courses.find((c) => c.id === id)).filter(Boolean) as Course[];
 
-    // Hard cap: if this sub-zone has a "no more than N" limit, block over-filling it.
+    // Cap: a "no more than N" sub-area can't be overfilled.
     const sz = SUBZONE_BY_ID[zone];
     if (sz?.cap !== undefined) {
       const resultIds = new Set([
@@ -278,40 +293,76 @@ export default function AllocateClient() {
       ]);
       const resultUnits = sum(courses.filter((c) => resultIds.has(c.id)));
       if (resultUnits > sz.cap + 1e-6) {
-        const current = sum(courses.filter((c) => c.subject === zone));
-        setWarning(
-          `Can't place ${moved.length > 1 ? `${moved.length} courses` : `“${moved[0]?.name}”`} here — ` +
-            `“${sz.label}” allows no more than ${sz.cap} units (it already has ${current}). Reduce the amount or pick another sub-area.`,
-        );
-        return; // blocked — nothing moves
+        return {
+          ok: false,
+          reason: `“${sz.label}” allows no more than ${sz.cap} units — this would push it to ${round2(resultUnits)}.`,
+        };
       }
     }
 
-    moved.forEach((c) => updateCourse(c.id, t));
+    // Type: a course whose subject clearly doesn't fit this requirement can't go here.
+    const expected = allocCat(t.category);
+    if (expected) {
+      const bad = moved.filter((c) => looksMismatched(c.name, expected).mismatch);
+      if (bad.length > 0) {
+        const g = looksMismatched(bad[0].name, expected).guess;
+        return {
+          ok: false,
+          reason:
+            bad.length === 1
+              ? `“${bad[0].name}” is a ${g ? ALLOC_CATEGORY_LABEL[g] : "different"} course — it doesn't count toward ${ALLOC_CATEGORY_LABEL[expected]}.`
+              : `${bad.length} of these don't count toward ${ALLOC_CATEGORY_LABEL[expected]}.`,
+        };
+      }
+    }
+    return { ok: true };
+  }
 
-    if (zone === POOL_ID) {
-      setWarning(null);
+  /** Move courses (no validation — caller validates first). */
+  function commitMove(ids: string[], zone: string) {
+    const t = targetFor(zone);
+    if (!t) return;
+    ids.forEach((id) => updateCourse(id, t));
+    setWarning(null);
+  }
+
+  function tryMove(ids: string[], zone: string): boolean {
+    const v = validateDrop(ids, zone);
+    if (!v.ok) {
+      setWarning(v.reason ?? "That move isn't allowed.");
+      return false;
+    }
+    commitMove(ids, zone);
+    return true;
+  }
+
+  function handleDragOver(e: DragOverEvent) {
+    const over = e.over ? String(e.over.id) : null;
+    setOverId(over);
+    if (!over) {
+      setDropError(null);
       return;
     }
-    const expected = allocCat(t.category);
-    const bad = expected
-      ? moved.filter((c) => looksMismatched(c.name, expected).mismatch)
-      : [];
-    if (bad.length === 0) setWarning(null);
-    else if (moved.length === 1)
-      setWarning(`“${bad[0].name}”: ${mismatchWarning(bad[0], expected)?.replace(/\.$/, "")} — placed anyway.`);
-    else setWarning(`Moved ${moved.length} courses — ${bad.length} look like a different type (see ⚠).`);
+    const courseId = String(e.active.id);
+    const ids =
+      selected.has(courseId) && selected.size > 0
+        ? Array.from(new Set([...selected, courseId]))
+        : [courseId];
+    const v = validateDrop(ids, over);
+    setDropError(v.ok ? null : v.reason ?? null);
   }
 
   function handleEnd(e: DragEndEvent) {
     setActiveId(null);
+    setOverId(null);
+    setDropError(null);
     const over = e.over?.id;
     if (!over) return;
     const courseId = String(e.active.id);
     const usingSelection = selected.has(courseId) && selected.size > 0;
     const ids = usingSelection ? Array.from(new Set([...selected, courseId])) : [courseId];
-    applyMove(ids, String(over));
-    if (usingSelection) setSelected(new Set());
+    const ok = tryMove(ids, String(over));
+    if (ok && usingSelection) setSelected(new Set());
   }
 
   const board: BoardState = {
@@ -344,7 +395,13 @@ export default function AllocateClient() {
           <DndContext
             sensors={sensors}
             onDragStart={(e: DragStartEvent) => setActiveId(String(e.active.id))}
+            onDragOver={handleDragOver}
             onDragEnd={handleEnd}
+            onDragCancel={() => {
+              setActiveId(null);
+              setOverId(null);
+              setDropError(null);
+            }}
           >
             {/* Toolbar: display toggles + selection actions */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -382,8 +439,7 @@ export default function AllocateClient() {
                     value=""
                     onChange={(e) => {
                       if (!e.target.value) return;
-                      applyMove(Array.from(selected), e.target.value);
-                      setSelected(new Set());
+                      if (tryMove(Array.from(selected), e.target.value)) setSelected(new Set());
                     }}
                     className="rounded-full border border-slate-200 px-3 py-1 text-xs focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
                   >
@@ -498,6 +554,7 @@ export default function AllocateClient() {
                             id={zone.id}
                             courses={zoneCourses}
                             expectedCategory={allocCat(SUBZONE_TO_CATEGORY[zone.id])}
+                            invalid={overId === zone.id && !!dropError}
                           >
                             <div className="mb-1.5 flex items-center justify-between gap-2">
                               <div className="min-w-0">
@@ -516,6 +573,7 @@ export default function AllocateClient() {
                         id={section.key}
                         courses={generalCourses}
                         expectedCategory={allocCat(section.key)}
+                        invalid={overId === section.key && !!dropError}
                         className="bg-slate-50/40"
                       >
                         <p className="mb-1.5 text-xs font-medium text-slate-500">
@@ -532,16 +590,30 @@ export default function AllocateClient() {
 
             <DragOverlay>
               {activeCourse ? (
-                selected.has(activeCourse.id) && selected.size > 1 ? (
-                  <div className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-oncolor shadow-soft">
-                    {selected.size} courses
-                  </div>
-                ) : (
-                  <CourseChip course={activeCourse} overlay />
-                )
+                <div className={`relative ${dropError ? "rounded-lg ring-2 ring-red-400" : ""}`}>
+                  {dropError && (
+                    <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-1 text-xs text-oncolor shadow">
+                      🚫
+                    </span>
+                  )}
+                  {selected.has(activeCourse.id) && selected.size > 1 ? (
+                    <div className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-oncolor shadow-soft">
+                      {selected.size} courses
+                    </div>
+                  ) : (
+                    <CourseChip course={activeCourse} overlay />
+                  )}
+                </div>
               ) : null}
             </DragOverlay>
           </DndContext>
+        )}
+
+        {/* Live reason while dragging onto a forbidden zone */}
+        {activeId && dropError && (
+          <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-oncolor shadow-soft">
+            🚫 {dropError}
+          </div>
         )}
 
         <p className="mt-8 text-xs text-slate-400">
