@@ -90,6 +90,13 @@ That's it — **no account or database needed**. Your data saves in your browser
    ```
 4. Restart `npm run dev`. A **Sign in** button appears in the nav.
 
+### Deploying to Vercel
+
+See **[`docs/DEPLOY.md`](docs/DEPLOY.md)** for the full guide. One gotcha worth flagging here:
+`NEXT_PUBLIC_*` env vars are **baked in at build time**, so after adding them in the Vercel
+dashboard you **must redeploy** (with build cache off) — otherwise the **Sign in** button
+won't appear even though the variables are set.
+
 ---
 
 ## 📜 Scripts
