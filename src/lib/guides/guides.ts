@@ -80,6 +80,30 @@ export const GUIDES: Guide[] = [
     tips: ["Enter your legal name exactly as it appears on the ID you'll bring to the test center."],
   },
   {
+    id: "select-sections-nasba",
+    stage: "exam",
+    emoji: "🎯",
+    title: "Select your sections & set up NASBA",
+    summary:
+      "After the CBA approves your education, you choose which exam sections to take in your CBA account; that's sent to NASBA, which bills you and then issues your NTS.",
+    steps: [
+      "Once the CBA approves you, log in to your CBA account and create an Application Remittance Form.",
+      "Select the exam section(s) you want to take now. The CBA sends your Authorization to Test (ATT) — with those sections — to NASBA.",
+      "NASBA emails you a 'CPA Examination Payment Coupon Notification' with your Jurisdiction Candidate ID and a link to the NASBA CPA Portal (dashboard.nasba.org).",
+      "No NASBA CPA Portal account yet? Use the CPA Portal Sign-Up link in that email — sign up with the SAME email as your exam application and your Jurisdiction Candidate ID (omit leading zeroes unless you're a Texas or Maryland applicant).",
+      "Pay your section fees in the portal within 90 days. After payment, NASBA issues your Notice to Schedule (NTS).",
+    ],
+    links: [
+      { label: "NASBA CPA Portal (dashboard)", url: "https://dashboard.nasba.org/" },
+      { label: "Log in to NASBA", url: "https://okta.nasba.org/" },
+      { label: "Email NASBA — CPAExam@nasba.org", url: "mailto:CPAExam@nasba.org" },
+    ],
+    tips: [
+      "Only pick sections you'll sit within the next few months — each one starts its own NTS clock once you pay.",
+      "No NASBA email? Check spam, confirm the email on your CBA application matches, then call NASBA at 1-866-MY-NASBA.",
+    ],
+  },
+  {
     id: "schedule-exam",
     stage: "exam",
     emoji: "🗓️",

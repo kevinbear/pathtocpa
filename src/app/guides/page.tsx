@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GUIDES, STAGE_LABELS, CBA_CONTACT, type GuideStage } from "@/lib/guides/guides";
+import ExamFlowDiagram from "@/components/guides/ExamFlowDiagram";
 
 export const metadata = { title: "Guides — PathToCPA" };
 
@@ -33,6 +34,7 @@ export default function GuidesPage() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
               {STAGE_LABELS[stage]}
             </h2>
+            {stage === "exam" && <ExamFlowDiagram />}
             <div className="space-y-3">
               {guides.map((g) => (
                 <details key={g.id} className="card group">
