@@ -61,6 +61,7 @@ export const GUIDES: Guide[] = [
       "Wait for the CBA to review your education and approve you to sit.",
     ],
     links: [
+      { label: "Create your CBA account / apply", url: "https://www.cba.ca.gov/cbt_public" },
       { label: "CBA — Apply for the CPA Exam", url: "https://www.dca.ca.gov/cba/applicants/" },
       { label: "CBA — Home", url: "https://www.dca.ca.gov/cba/" },
     ],
