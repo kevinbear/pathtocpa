@@ -155,6 +155,28 @@ body {
   }
 }
 
+/* Slide-deck page transition — content slides in from the right on navigation.
+   No fill-mode, so the transform is dropped once the animation ends (keeps
+   `position: fixed` descendants like the drag overlay anchored to the viewport). */
+@keyframes pathtocpa-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.slide-in-page {
+  animation: pathtocpa-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide-in-page {
+    animation: none;
+  }
+}
+
 /* Shimmer skeleton placeholder */
 @keyframes pathtocpa-shimmer {
   100% {
