@@ -19,7 +19,7 @@ export const californiaRuleSet: RuleSet = {
   state: "California",
   authority: "California Board of Accountancy (CBA)",
   sourceUrl:
-    "https://www.dca.ca.gov/cba/applicants/educational-requirements.shtml",
+    "https://www.dca.ca.gov/cba/applicants/",
   lastVerified: "2026-06-24",
 
   requiresBachelorsForExam: true,

@@ -58,7 +58,7 @@ export default function AboutPage() {
           </a>
           <a
             className="font-medium underline"
-            href="https://www.dca.ca.gov/cba/applicants/educational-requirements.shtml"
+            href="https://www.dca.ca.gov/cba/applicants/"
             target="_blank"
             rel="noreferrer"
           >

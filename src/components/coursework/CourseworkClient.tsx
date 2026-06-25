@@ -37,6 +37,12 @@ export default function CourseworkClient() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const deleteTarget = courses.find((c) => c.id === deleteId);
+  const allLocked = courses.length > 0 && courses.every((c) => c.locked);
+
+  function toggleLockAll() {
+    const target = !allLocked;
+    courses.forEach((c) => updateCourse(c.id, { locked: target }));
+  }
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -207,10 +213,20 @@ export default function CourseworkClient() {
 
         {/* Courses table (full width) */}
         <div>
-          <div className="mt-2 mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Your courses ({courses.length})
-            </h2>
+          <div className="mt-2 mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Your courses ({courses.length})
+              </h2>
+              {courses.length > 0 && (
+                <button
+                  onClick={toggleLockAll}
+                  className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+                >
+                  {allLocked ? "🔓 Unlock all" : "🔒 Lock all"}
+                </button>
+              )}
+            </div>
             <p className="text-xs text-slate-400">
               Edit any cell directly. Imported rows are locked 🔒 — click to unlock.
             </p>

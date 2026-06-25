@@ -135,11 +135,11 @@ export default function JourneyClient() {
             </div>
           </div>
 
-          <ol className="relative space-y-4 border-l-2 border-slate-100 pl-6">
+          <ol className="relative space-y-4 border-l-2 border-slate-100 pl-10">
             {journey.stages.map((stage, i) => (
               <li key={stage.key} className="relative">
                 <span
-                  className={`absolute -left-[1.97rem] flex h-8 w-8 items-center justify-center rounded-full text-sm ring-4 ring-white ${
+                  className={`absolute -left-[3.05rem] top-1 flex h-8 w-8 items-center justify-center rounded-full text-sm ring-4 ring-white ${
                     stage.status === "done"
                       ? "bg-brand-100"
                       : stage.key === journey.currentStageKey

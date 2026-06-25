@@ -7,6 +7,7 @@ import { summarize, formatUSD } from "@/lib/costs/summary";
 import { CA_COST_TEMPLATE } from "@/lib/costs/template";
 import { exportExpensesCsv } from "@/lib/costs/export";
 import ProgressBar from "@/components/ProgressBar";
+import ConfirmModal from "@/components/ConfirmModal";
 import {
   amountPaid,
   percentPaid,
@@ -51,6 +52,10 @@ export default function CostsClient() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState(false);
+
+  const deleteExpenseTarget = expenses.find((e) => e.id === deleteExpenseId);
 
   const summary = useMemo(() => summarize(expenses), [expenses]);
 
@@ -176,7 +181,9 @@ export default function CostsClient() {
           {/* Toolbar */}
           <div className="mb-6 flex flex-wrap gap-3">
             <button
-              onClick={() => addExpenses(CA_COST_TEMPLATE)}
+              onClick={() =>
+                expenses.length > 0 ? setConfirmTemplate(true) : addExpenses(CA_COST_TEMPLATE)
+              }
               className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
             >
               + Add California template
@@ -396,7 +403,7 @@ export default function CostsClient() {
                           Edit
                         </button>
                         <button
-                          onClick={() => deleteExpense(e.id)}
+                          onClick={() => setDeleteExpenseId(e.id)}
                           className="rounded-full px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                         >
                           Delete
@@ -444,6 +451,34 @@ export default function CostsClient() {
           </p>
         </>
       )}
+
+      <ConfirmModal
+        open={!!deleteExpenseId}
+        title="Delete expense?"
+        message={
+          deleteExpenseTarget
+            ? `Remove "${deleteExpenseTarget.label}" from your budget? This can't be undone.`
+            : "Remove this expense?"
+        }
+        onConfirm={() => {
+          if (deleteExpenseId) deleteExpense(deleteExpenseId);
+          setDeleteExpenseId(null);
+        }}
+        onCancel={() => setDeleteExpenseId(null)}
+      />
+
+      <ConfirmModal
+        open={confirmTemplate}
+        tone="brand"
+        confirmLabel="Add template anyway"
+        title="Add the California template?"
+        message="You already have expenses. This adds the 12 template items to the bottom of your list — it won't replace or merge with what's there, so you may end up with duplicates. Continue?"
+        onConfirm={() => {
+          addExpenses(CA_COST_TEMPLATE);
+          setConfirmTemplate(false);
+        }}
+        onCancel={() => setConfirmTemplate(false)}
+      />
     </main>
   );
 }

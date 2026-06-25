@@ -38,8 +38,8 @@ export const GUIDES: Guide[] = [
       "Keep your order confirmations until the CBA confirms receipt.",
     ],
     links: [
-      { label: "CBA — Educational Requirements", url: "https://www.cba.ca.gov/applicants/educational-requirements.shtml" },
-      { label: "CBA — Applicants", url: "https://www.cba.ca.gov/applicants/" },
+      { label: "CBA — Educational Requirements", url: "https://www.dca.ca.gov/cba/applicants/" },
+      { label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" },
     ],
     tips: [
       "Order early — transcripts can take 1–2 weeks to arrive.",
@@ -61,8 +61,8 @@ export const GUIDES: Guide[] = [
       "Wait for the CBA to review your education and approve you to sit.",
     ],
     links: [
-      { label: "CBA — Apply for the CPA Exam", url: "https://www.cba.ca.gov/applicants/exam.shtml" },
-      { label: "CBA — Home", url: "https://www.cba.ca.gov/" },
+      { label: "CBA — Apply for the CPA Exam", url: "https://www.dca.ca.gov/cba/applicants/" },
+      { label: "CBA — Home", url: "https://www.dca.ca.gov/cba/" },
     ],
     tips: ["Enter your legal name exactly as it appears on the ID you'll bring to the test center."],
   },
@@ -101,7 +101,7 @@ export const GUIDES: Guide[] = [
       "Have a licensed CPA who supervised you ready to sign your experience verification.",
       "If you'll sign attest reports, complete the additional attest experience (e.g. 500 hours).",
     ],
-    links: [{ label: "CBA — Applicants", url: "https://www.cba.ca.gov/applicants/" }],
+    links: [{ label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" }],
     tips: ["Confirm your supervisor's CPA license is active and in good standing."],
   },
   {
@@ -117,7 +117,7 @@ export const GUIDES: Guide[] = [
       "Bring a government-issued photo ID and pay the rolling + DOJ/FBI fees.",
       "Results are sent electronically to the CBA.",
     ],
-    links: [{ label: "CBA — Applicants", url: "https://www.cba.ca.gov/applicants/" }],
+    links: [{ label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" }],
     tips: ["Do this well before you submit your license application so results are on file."],
   },
   {
@@ -152,7 +152,7 @@ export const GUIDES: Guide[] = [
       "Confirm PETH passed and Live Scan results are on file.",
       "Submit the licensure application and fees through your CBA account.",
     ],
-    links: [{ label: "CBA — Applicants", url: "https://www.cba.ca.gov/applicants/" }],
+    links: [{ label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" }],
     tips: ["Double-check every requirement is marked complete before submitting to avoid delays."],
   },
 ];
@@ -160,5 +160,5 @@ export const GUIDES: Guide[] = [
 export const CBA_CONTACT = {
   phone: "(916) 561-1701",
   email: "licensinginfo@cba.ca.gov",
-  website: "https://www.cba.ca.gov/",
+  website: "https://www.dca.ca.gov/cba/",
 };

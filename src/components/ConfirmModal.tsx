@@ -5,6 +5,7 @@ type Props = {
   title: string;
   message: string;
   confirmLabel?: string;
+  tone?: "danger" | "brand";
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -14,6 +15,7 @@ export default function ConfirmModal({
   title,
   message,
   confirmLabel = "Delete",
+  tone = "danger",
   onConfirm,
   onCancel,
 }: Props) {
@@ -41,7 +43,9 @@ export default function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-oncolor hover:bg-red-700"
+            className={`rounded-full px-4 py-2 text-sm font-semibold text-oncolor ${
+              tone === "brand" ? "bg-brand-600 hover:bg-brand-700" : "bg-red-600 hover:bg-red-700"
+            }`}
           >
             {confirmLabel}
           </button>
