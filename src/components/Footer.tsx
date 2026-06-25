@@ -1,8 +1,6 @@
 import Link from "next/link";
 
 const GITHUB_URL = "https://github.com/kevinbear/pathtocpa";
-/** Paste a Buy Me a Coffee / Ko-fi / GitHub Sponsors URL here to show a support button. */
-const SUPPORT_URL: string = "";
 
 const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -56,16 +54,6 @@ export default function Footer() {
                 </svg>
                 GitHub
               </a>
-              {SUPPORT_URL && (
-                <a
-                  href={SUPPORT_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-900 hover:bg-amber-200"
-                >
-                  ☕ Buy me a coffee
-                </a>
-              )}
             </div>
           </div>
 
