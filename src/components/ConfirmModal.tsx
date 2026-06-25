@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+
 type Props = {
   open: boolean;
   title: string;
@@ -19,8 +21,8 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: Props) {
-  if (!open) return null;
-  return (
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={onCancel}
@@ -51,6 +53,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
