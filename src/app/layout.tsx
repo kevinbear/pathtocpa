@@ -26,7 +26,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="flex min-h-screen flex-col font-sans antialiased">
         <AppDataProvider>
           <Nav />
           {children}

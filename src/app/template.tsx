@@ -6,5 +6,7 @@
  * page-to-page animation across the whole app.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
-  return <div className="slide-in-page">{children}</div>;
+  // `flex-1` lets the page content grow to fill the viewport so the footer is
+  // pushed to the bottom even when a page is short (sticky-footer layout).
+  return <div className="slide-in-page flex-1">{children}</div>;
 }
