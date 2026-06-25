@@ -20,8 +20,19 @@ function SyncDot({ status }: { status: SyncStatus }) {
 }
 
 export default function AuthMenu() {
-  const { cloudEnabled, user, syncStatus, signIn, signUp, signOut, clearAll } = useAppData();
+  const {
+    cloudEnabled,
+    user,
+    syncStatus,
+    storageMode,
+    setStorageMode,
+    signIn,
+    signUp,
+    signOut,
+    clearAll,
+  } = useAppData();
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,27 +44,77 @@ export default function AuthMenu() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-2">
-        <SyncDot status={syncStatus} />
-        <span className="hidden max-w-[10rem] truncate text-xs text-slate-500 sm:inline">
-          {user.email}
-        </span>
+      <div className="relative">
         <button
-          onClick={() => setConfirmClear(true)}
-          className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          onClick={() => setAccountOpen((o) => !o)}
+          className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-100"
         >
-          Clear data
+          <SyncDot status={syncStatus} />
+          <span className="hidden max-w-[10rem] truncate text-xs text-slate-500 sm:inline">
+            {user.email}
+          </span>
+          <span className="text-xs text-slate-400">⌄</span>
         </button>
-        <button
-          onClick={() => signOut()}
-          className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
-        >
-          Sign out
-        </button>
+
+        {accountOpen && (
+          <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-100">
+            <p className="px-1 pb-2 text-xs text-slate-400 truncate">{user.email}</p>
+
+            <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              Where to save your data
+            </p>
+            <div className="mt-1 flex gap-1">
+              <button
+                onClick={() => setStorageMode("cloud")}
+                className={`flex-1 rounded-xl px-2 py-1.5 text-sm ${
+                  storageMode === "cloud"
+                    ? "bg-brand-100 font-medium text-brand-800"
+                    : "text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                ☁️ Cloud
+              </button>
+              <button
+                onClick={() => setStorageMode("local")}
+                className={`flex-1 rounded-xl px-2 py-1.5 text-sm ${
+                  storageMode === "local"
+                    ? "bg-brand-100 font-medium text-brand-800"
+                    : "text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                💾 This device
+              </button>
+            </div>
+            <p className="mt-1 px-1 text-[11px] leading-snug text-slate-400">
+              {storageMode === "cloud"
+                ? "Synced to the database — available on any device you sign in to."
+                : "Stored only in this browser for this account — not uploaded, and not on other devices."}
+            </p>
+
+            <div className="mt-3 border-t border-slate-100 pt-2">
+              <button
+                onClick={() => {
+                  setConfirmClear(true);
+                  setAccountOpen(false);
+                }}
+                className="block w-full rounded-xl px-1 py-1.5 text-left text-sm text-red-600 hover:bg-red-50"
+              >
+                Clear all my data
+              </button>
+              <button
+                onClick={() => signOut()}
+                className="block w-full rounded-xl px-1 py-1.5 text-left text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
+
         <ConfirmModal
           open={confirmClear}
           title="Clear all your data?"
-          message="This permanently erases all coursework, costs, and progress for this account (here and in the cloud). This can't be undone."
+          message="This permanently erases all coursework, costs, and progress for this account. This can't be undone."
           confirmLabel="Clear everything"
           onConfirm={() => {
             clearAll();

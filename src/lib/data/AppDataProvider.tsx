@@ -41,6 +41,8 @@ interface AppDataContextValue {
   cloudEnabled: boolean;
   user: User | null;
   syncStatus: SyncStatus;
+  storageMode: StorageMode;
+  setStorageMode: (mode: StorageMode) => Promise<void>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -71,21 +73,16 @@ function normalize(parsed: Partial<AppData> | null | undefined): AppData {
   };
 }
 
-// Anonymous (logged-out) data is cached locally; logged-in data lives ONLY in the
-// cloud database, never in localStorage — so a shared browser can't leak it.
+export type StorageMode = "cloud" | "local";
+
+// Per-identity localStorage keys so accounts never share a cache. Logged-in users
+// default to cloud (database) but can opt into "local" (this-device-only) — which
+// is still namespaced by their user id, so a shared browser can't leak it.
 const ANON_KEY = `${STORAGE_KEY}.anon`;
 const USER_PREFIX = `${STORAGE_KEY}.u.`;
-
-/** Remove any leftover per-user caches a previous version may have written. */
-function purgeUserCaches() {
-  try {
-    for (const k of Object.keys(window.localStorage)) {
-      if (k.startsWith(USER_PREFIX)) window.localStorage.removeItem(k);
-    }
-  } catch {
-    // ignore
-  }
-}
+const PREF_PREFIX = `${STORAGE_KEY}.pref.`;
+const userKey = (id: string) => `${USER_PREFIX}${id}`;
+const prefKey = (id: string) => `${PREF_PREFIX}${id}`;
 
 function safeGet(key: string): string | null {
   try {
@@ -111,12 +108,22 @@ function loadLocal(key: string): AppData | null {
   }
 }
 
+/** Per-user storage preference (defaults to cloud). */
+function readPref(userId: string): StorageMode {
+  return safeGet(prefKey(userId)) === "local" ? "local" : "cloud";
+}
+function writePref(userId: string, mode: StorageMode) {
+  safeSet(prefKey(userId), mode);
+}
+
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(DEFAULT_APP_DATA);
   const [authResolved, setAuthResolved] = useState(false);
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("local");
+  // Where the current logged-in user's data is saved. Anonymous use is always local.
+  const [storageMode, setStorageModeState] = useState<StorageMode>("cloud");
 
   const dataRef = useRef(data);
   useEffect(() => {
@@ -128,9 +135,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const readyToSaveRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 1) Clean up any stale per-user caches; resolve auth immediately if no cloud.
+  // 1) Resolve auth immediately if there's no cloud configured.
   useEffect(() => {
-    purgeUserCaches();
     if (!isSupabaseConfigured) setAuthResolved(true);
   }, []);
 
@@ -151,7 +157,6 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // 3) Load data for the current identity once auth is known.
-  //    Anonymous → local cache. Logged in → the cloud row is the ONLY source.
   useEffect(() => {
     if (!authResolved) return;
     readyToSaveRef.current = false;
@@ -169,34 +174,45 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           }
         }
         applyingCloudRef.current = true;
+        setStorageModeState("local");
         setData(local ?? DEFAULT_APP_DATA);
         setSyncStatus("local");
       } else {
-        // Logged in: read from the database; a brand-new account starts empty.
-        const sb = supabase;
-        if (!sb) return;
-        setSyncStatus("syncing");
-        const { data: row, error } = await sb
-          .from("user_data")
-          .select("data")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (cancelled) return;
-        if (error) {
-          setSyncStatus("error");
-          setReady(true);
-          return;
+        const mode = readPref(user.id);
+        setStorageModeState(mode);
+
+        if (mode === "local") {
+          // This-device-only: read this account's namespaced local cache.
+          applyingCloudRef.current = true;
+          setData(loadLocal(userKey(user.id)) ?? DEFAULT_APP_DATA);
+          setSyncStatus("local");
+        } else {
+          // Cloud: the database row for THIS user is the source of truth.
+          const sb = supabase;
+          if (!sb) return;
+          setSyncStatus("syncing");
+          const { data: row, error } = await sb
+            .from("user_data")
+            .select("data")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (cancelled) return;
+          if (error) {
+            setSyncStatus("error");
+            setReady(true);
+            return;
+          }
+          applyingCloudRef.current = true;
+          setData(row && row.data ? normalize(row.data as Partial<AppData>) : DEFAULT_APP_DATA);
+          if (!row) {
+            await sb.from("user_data").upsert({
+              user_id: user.id,
+              data: DEFAULT_APP_DATA,
+              updated_at: new Date().toISOString(),
+            });
+          }
+          setSyncStatus("synced");
         }
-        applyingCloudRef.current = true;
-        setData(row && row.data ? normalize(row.data as Partial<AppData>) : DEFAULT_APP_DATA);
-        if (!row) {
-          await sb.from("user_data").upsert({
-            user_id: user.id,
-            data: DEFAULT_APP_DATA,
-            updated_at: new Date().toISOString(),
-          });
-        }
-        setSyncStatus("synced");
       }
       readyToSaveRef.current = true;
       setReady(true);
@@ -207,16 +223,21 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, authResolved]);
 
-  // 4) Persist ONLY anonymous data to localStorage. Logged-in data stays in the cloud.
+  // 4) Persist to localStorage for anonymous use OR a logged-in "local" preference.
+  //    Cloud-mode logged-in data is never written to the browser.
   useEffect(() => {
-    if (!ready || user) return;
-    safeSet(ANON_KEY, JSON.stringify(data));
-  }, [data, ready, user]);
+    if (!ready) return;
+    if (!user) {
+      safeSet(ANON_KEY, JSON.stringify(data));
+    } else if (storageMode === "local") {
+      safeSet(userKey(user.id), JSON.stringify(data));
+    }
+  }, [data, ready, user, storageMode]);
 
-  // 5) When logged in, debounce-save changes to the cloud.
+  // 5) When logged in AND in cloud mode, debounce-save changes to the database.
   useEffect(() => {
     const sb = supabase;
-    if (!sb || !user || !ready) return;
+    if (!sb || !user || !ready || storageMode !== "cloud") return;
     // Skip the state change caused by adopting cloud data, and the initial load.
     if (applyingCloudRef.current) {
       applyingCloudRef.current = false;
@@ -238,7 +259,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [data, user, ready]);
+  }, [data, user, ready, storageMode]);
 
   // --- Mutations ---
   const setProfile = useCallback((patch: Partial<Profile>) => {
@@ -290,6 +311,31 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const clearAll = useCallback(() => setData(DEFAULT_APP_DATA), []);
 
+  // Switch where the logged-in user's data is saved, carrying the current data over.
+  const setStorageMode = useCallback(
+    async (mode: StorageMode) => {
+      if (!user) return;
+      writePref(user.id, mode);
+      setStorageModeState(mode);
+      if (mode === "cloud") {
+        const sb = supabase;
+        if (sb) {
+          setSyncStatus("syncing");
+          const { error } = await sb.from("user_data").upsert({
+            user_id: user.id,
+            data: dataRef.current,
+            updated_at: new Date().toISOString(),
+          });
+          setSyncStatus(error ? "error" : "synced");
+        }
+      } else {
+        safeSet(userKey(user.id), JSON.stringify(dataRef.current));
+        setSyncStatus("local");
+      }
+    },
+    [user],
+  );
+
   // --- Auth ---
   const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const sb = supabase;
@@ -329,6 +375,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       cloudEnabled: isSupabaseConfigured,
       user,
       syncStatus,
+      storageMode,
+      setStorageMode,
       signIn,
       signUp,
       signOut,
@@ -347,6 +395,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       clearAll,
       user,
       syncStatus,
+      storageMode,
+      setStorageMode,
       signIn,
       signUp,
       signOut,
