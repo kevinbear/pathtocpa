@@ -71,9 +71,21 @@ function normalize(parsed: Partial<AppData> | null | undefined): AppData {
   };
 }
 
-// Per-identity localStorage keys so accounts never share a local cache.
+// Anonymous (logged-out) data is cached locally; logged-in data lives ONLY in the
+// cloud database, never in localStorage — so a shared browser can't leak it.
 const ANON_KEY = `${STORAGE_KEY}.anon`;
-const userKey = (id: string) => `${STORAGE_KEY}.u.${id}`;
+const USER_PREFIX = `${STORAGE_KEY}.u.`;
+
+/** Remove any leftover per-user caches a previous version may have written. */
+function purgeUserCaches() {
+  try {
+    for (const k of Object.keys(window.localStorage)) {
+      if (k.startsWith(USER_PREFIX)) window.localStorage.removeItem(k);
+    }
+  } catch {
+    // ignore
+  }
+}
 
 function safeGet(key: string): string | null {
   try {
@@ -101,7 +113,8 @@ function loadLocal(key: string): AppData | null {
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(DEFAULT_APP_DATA);
-  const [hydrated, setHydrated] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
+  const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("local");
 
@@ -115,17 +128,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const readyToSaveRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 1) Mark hydrated on mount; the identity effect below loads the right data.
+  // 1) Clean up any stale per-user caches; resolve auth immediately if no cloud.
   useEffect(() => {
-    setHydrated(true);
+    purgeUserCaches();
+    if (!isSupabaseConfigured) setAuthResolved(true);
   }, []);
 
-  // 2) Track auth session (only when Supabase is configured).
+  // 2) Track the auth session (only when Supabase is configured).
   useEffect(() => {
     const sb = supabase;
     if (!sb) return;
     sb.auth.getSession().then(({ data: s }) => {
       setUser(s.session?.user ?? null);
+      setAuthResolved(true);
       if (!s.session) setSyncStatus("local");
     });
     const { data: sub } = sb.auth.onAuthStateChange((_event, session) => {
@@ -135,16 +150,16 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // 3) Load the data for the CURRENT identity (anonymous or a specific user).
-  //    Each identity has its own localStorage cache + cloud row — they never mix.
+  // 3) Load data for the current identity once auth is known.
+  //    Anonymous → local cache. Logged in → the cloud row is the ONLY source.
   useEffect(() => {
-    if (!hydrated) return;
+    if (!authResolved) return;
     readyToSaveRef.current = false;
     let cancelled = false;
 
     (async () => {
       if (!user) {
-        // Anonymous: load the anonymous cache (migrating the legacy shared key once).
+        // Anonymous: local-only (migrate the legacy shared key once).
         let local = loadLocal(ANON_KEY);
         if (!local) {
           const legacy = loadLocal(STORAGE_KEY);
@@ -156,60 +171,52 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         applyingCloudRef.current = true;
         setData(local ?? DEFAULT_APP_DATA);
         setSyncStatus("local");
-        readyToSaveRef.current = true;
-        return;
-      }
-
-      // Logged in: the cloud row for THIS user is the source of truth.
-      const sb = supabase;
-      if (!sb) return;
-      setSyncStatus("syncing");
-      const { data: row, error } = await sb
-        .from("user_data")
-        .select("data")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        setSyncStatus("error");
-        return;
-      }
-
-      if (row && row.data) {
-        applyingCloudRef.current = true;
-        setData(normalize(row.data as Partial<AppData>));
-        setSyncStatus("synced");
       } else {
-        // Brand-new account: seed ONLY from this user's own local cache (usually
-        // empty) — never from another identity's data. Then create the cloud row.
-        const own = loadLocal(userKey(user.id)) ?? DEFAULT_APP_DATA;
+        // Logged in: read from the database; a brand-new account starts empty.
+        const sb = supabase;
+        if (!sb) return;
+        setSyncStatus("syncing");
+        const { data: row, error } = await sb
+          .from("user_data")
+          .select("data")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          setSyncStatus("error");
+          setReady(true);
+          return;
+        }
         applyingCloudRef.current = true;
-        setData(own);
-        await sb.from("user_data").upsert({
-          user_id: user.id,
-          data: own,
-          updated_at: new Date().toISOString(),
-        });
+        setData(row && row.data ? normalize(row.data as Partial<AppData>) : DEFAULT_APP_DATA);
+        if (!row) {
+          await sb.from("user_data").upsert({
+            user_id: user.id,
+            data: DEFAULT_APP_DATA,
+            updated_at: new Date().toISOString(),
+          });
+        }
         setSyncStatus("synced");
       }
       readyToSaveRef.current = true;
+      setReady(true);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user, hydrated]);
+  }, [user, authResolved]);
 
-  // 4) Mirror to the CURRENT identity's localStorage key (offline cache).
+  // 4) Persist ONLY anonymous data to localStorage. Logged-in data stays in the cloud.
   useEffect(() => {
-    if (!hydrated) return;
-    safeSet(user ? userKey(user.id) : ANON_KEY, JSON.stringify(data));
-  }, [data, hydrated, user]);
+    if (!ready || user) return;
+    safeSet(ANON_KEY, JSON.stringify(data));
+  }, [data, ready, user]);
 
   // 5) When logged in, debounce-save changes to the cloud.
   useEffect(() => {
     const sb = supabase;
-    if (!sb || !user || !hydrated) return;
+    if (!sb || !user || !ready) return;
     // Skip the state change caused by adopting cloud data, and the initial load.
     if (applyingCloudRef.current) {
       applyingCloudRef.current = false;
@@ -231,7 +238,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [data, user, hydrated]);
+  }, [data, user, ready]);
 
   // --- Mutations ---
   const setProfile = useCallback((patch: Partial<Profile>) => {
@@ -306,7 +313,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AppDataContextValue>(
     () => ({
-      hydrated,
+      hydrated: ready,
       profile: data.profile,
       courses: data.courses,
       expenses: data.expenses,
@@ -327,7 +334,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       signOut,
     }),
     [
-      hydrated,
+      ready,
       data,
       setProfile,
       addCourse,
