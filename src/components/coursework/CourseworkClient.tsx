@@ -204,12 +204,12 @@ export default function CourseworkClient() {
       </div>
 
         {/* Import + add form, side by side. The form fades out while importing. */}
-        <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_30rem]"}`}>
+        <div className={`grid grid-cols-1 items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_30rem]"}`}>
           <ImportPanel onPreviewActive={setImporting} />
 
           <div
             aria-hidden={importing}
-            className={`transition-all duration-300 ease-out ${
+            className={`min-w-0 transition-all duration-300 ease-out ${
               importing
                 ? "max-h-0 -translate-y-2 overflow-hidden opacity-0"
                 : "max-h-[200rem] translate-y-0 opacity-100"

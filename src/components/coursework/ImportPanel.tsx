@@ -100,7 +100,7 @@ export default function ImportPanel({
   }
 
   return (
-    <div className="card">
+    <div className="card min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">

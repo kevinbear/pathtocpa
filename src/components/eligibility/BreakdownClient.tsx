@@ -37,7 +37,7 @@ function RequirementDetail({ progress }: { progress: CategoryProgress }) {
   });
 
   return (
-    <div className="card">
+    <div className="card min-w-0">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
@@ -250,7 +250,7 @@ export default function BreakdownClient() {
             </label>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {requirements.map((r) => (
               <RequirementDetail key={r.key} progress={r} />
             ))}
