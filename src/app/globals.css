@@ -159,11 +159,11 @@ body {
    next face of a rotating cube (perspective + rotateY). No fill-mode, so the
    transform is dropped once it ends (keeps `position: fixed` descendants like the
    drag overlay anchored to the viewport, and avoids a lingering containing block). */
-/* One consistent page-to-page transition (applied app-wide via app/template.tsx):
-   the incoming page swings in from the right like the next face of a rotating cube.
-   Fixed-rem offset (not %) so wide pages don't flash a horizontal scrollbar. No
-   fill-mode, so the transform is dropped once it ends (keeps `position: fixed`
-   descendants anchored to the viewport once the animation finishes). */
+/* Page-to-page transition (applied app-wide via app/template.tsx). The style is
+   chosen in the Appearance menu and stored as `data-anim` on <html>. Fixed-rem
+   offsets (not %) so wide pages don't flash a horizontal scrollbar. No fill-mode,
+   so transforms are dropped once the animation ends (keeps `position: fixed`
+   descendants anchored to the viewport afterward). */
 @keyframes pathtocpa-cube-in {
   0% {
     opacity: 0;
@@ -177,14 +177,78 @@ body {
     transform: perspective(1600px) translateX(0) rotateY(0deg) scale(1);
   }
 }
+@keyframes pathtocpa-slide-in-x {
+  0% {
+    opacity: 0;
+    transform: translateX(4rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes pathtocpa-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pathtocpa-zoom-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pathtocpa-flip-in {
+  0% {
+    opacity: 0;
+    transform: perspective(1600px) rotateX(40deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1600px) rotateX(0deg);
+  }
+}
+
 .slide-in-page {
-  transform-origin: center center;
   backface-visibility: hidden;
+}
+/* Default (no attribute) and explicit "cube" → the 3D cube rotation. */
+.slide-in-page,
+[data-anim="cube"] .slide-in-page {
+  transform-origin: center center;
   animation: pathtocpa-cube-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-anim="slide"] .slide-in-page {
+  animation: pathtocpa-slide-in-x 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-anim="fade"] .slide-in-page {
+  animation: pathtocpa-fade-in 0.4s ease-out;
+}
+[data-anim="zoom"] .slide-in-page {
+  animation: pathtocpa-zoom-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-anim="flip"] .slide-in-page {
+  transform-origin: top center;
+  animation: pathtocpa-flip-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-anim="none"] .slide-in-page {
+  animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .slide-in-page {
-    animation: none;
+    animation: none !important;
   }
 }
 

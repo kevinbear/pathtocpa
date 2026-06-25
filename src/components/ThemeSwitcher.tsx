@@ -13,10 +13,22 @@ export const THEMES = [
 
 export const THEME_KEY = "pathtocpa.theme";
 export const MODE_KEY = "pathtocpa.mode";
+export const ANIM_KEY = "pathtocpa.anim";
+
+/** Page-transition styles offered in the Appearance menu. */
+export const ANIMATIONS = [
+  { key: "cube", label: "Cube" },
+  { key: "slide", label: "Slide" },
+  { key: "fade", label: "Fade" },
+  { key: "zoom", label: "Zoom" },
+  { key: "flip", label: "Flip" },
+  { key: "none", label: "None" },
+];
 
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState("teal");
   const [mode, setMode] = useState<"light" | "dark">("light");
+  const [anim, setAnim] = useState("cube");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   useClickOutside(rootRef, () => setOpen(false), open);
@@ -24,9 +36,12 @@ export default function ThemeSwitcher() {
   useEffect(() => {
     const savedTheme = (typeof localStorage !== "undefined" && localStorage.getItem(THEME_KEY)) || "teal";
     const savedMode = (typeof localStorage !== "undefined" && localStorage.getItem(MODE_KEY)) || "light";
+    const savedAnim = (typeof localStorage !== "undefined" && localStorage.getItem(ANIM_KEY)) || "cube";
     setTheme(savedTheme);
     setMode(savedMode === "dark" ? "dark" : "light");
+    setAnim(savedAnim);
     document.documentElement.setAttribute("data-theme", savedTheme);
+    document.documentElement.setAttribute("data-anim", savedAnim);
     document.documentElement.classList.toggle("dark", savedMode === "dark");
   }, []);
 
@@ -50,6 +65,16 @@ export default function ThemeSwitcher() {
     }
   }
 
+  function pickAnim(a: string) {
+    setAnim(a);
+    document.documentElement.setAttribute("data-anim", a);
+    try {
+      localStorage.setItem(ANIM_KEY, a);
+    } catch {
+      // ignore
+    }
+  }
+
   const current = THEMES.find((t) => t.key === theme) ?? THEMES[0];
 
   return (
@@ -62,7 +87,7 @@ export default function ThemeSwitcher() {
         <span className="h-4 w-4 rounded-full" style={{ background: current.color }} />
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-44 rounded-2xl bg-white p-2 shadow-soft ring-1 ring-slate-100">
+        <div className="absolute right-0 z-30 mt-2 w-56 rounded-2xl bg-white p-2 shadow-soft ring-1 ring-slate-100">
           <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Appearance
           </p>
@@ -100,6 +125,28 @@ export default function ThemeSwitcher() {
               {theme === t.key && <span className="ml-auto text-xs text-slate-400">✓</span>}
             </button>
           ))}
+
+          <p className="mt-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Page animation
+          </p>
+          <div className="grid grid-cols-3 gap-1 px-1">
+            {ANIMATIONS.map((a) => (
+              <button
+                key={a.key}
+                onClick={() => pickAnim(a.key)}
+                className={`rounded-lg px-2 py-1.5 text-xs ${
+                  anim === a.key
+                    ? "bg-slate-100 font-medium text-slate-900"
+                    : "text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+          <p className="px-3 pb-1 pt-1.5 text-[11px] text-slate-400">
+            Plays when you switch pages.
+          </p>
         </div>
       )}
     </div>
