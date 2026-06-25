@@ -457,15 +457,42 @@ export default function CostsClient() {
                         )}
                         <button
                           onClick={() => setEditingExpense(e)}
-                          className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                          aria-label={`Edit ${e.label}`}
+                          title="Edit"
+                          className="rounded-full p-1.5 text-brand-700 hover:bg-brand-50"
                         >
-                          Edit
+                          <svg
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path d="M13.5 3.5l3 3L7 16H4v-3z" />
+                            <path d="M12 5l3 3" />
+                          </svg>
                         </button>
                         <button
                           onClick={() => setDeleteExpenseId(e.id)}
-                          className="rounded-full px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                          aria-label={`Delete ${e.label}`}
+                          title="Delete"
+                          className="rounded-full p-1.5 text-red-600 hover:bg-red-50"
                         >
-                          Delete
+                          <svg
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path d="M4 6h12M8 6V4h4v2M6 6l.8 9.5h6.4L14 6" />
+                          </svg>
                         </button>
                       </div>
                     </div>
