@@ -237,6 +237,51 @@ function ToggleBtn({
   );
 }
 
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`h-5 w-5 shrink-0 text-brand-500 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 5l5 5-5 5" />
+    </svg>
+  );
+}
+
+/** Up double-chevron when everything is expanded (action = collapse), else down. */
+function StackIcon({ collapse }: { collapse: boolean }) {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {collapse ? (
+        <>
+          <path d="M6 11l4-4 4 4" />
+          <path d="M6 16l4-4 4 4" />
+        </>
+      ) : (
+        <>
+          <path d="M6 4l4 4 4-4" />
+          <path d="M6 9l4 4 4-4" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export default function AllocateClient() {
   const { hydrated, courses, profile, updateCourse } = useAppData();
   const accountingStudyWaived = profileWaivesAccountingStudy(profile);
@@ -251,6 +296,7 @@ export default function AllocateClient() {
   // Sections are collapsed by default; expand to work inside them.
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const ALL_KEYS = useMemo(() => ["pool", ...ALLOCATION_TAXONOMY.map((s) => s.key)], []);
+  const allExpanded = ALL_KEYS.every((k) => expanded.has(k));
   const toggleExpand = (k: string) =>
     setExpanded((p) => {
       const n = new Set(p);
@@ -419,16 +465,11 @@ export default function AllocateClient() {
 
               <span className="mx-1 h-5 w-px bg-slate-200" />
               <button
-                onClick={() => setExpanded(new Set(ALL_KEYS))}
-                className="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+                onClick={() => setExpanded(allExpanded ? new Set() : new Set(ALL_KEYS))}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
               >
-                Expand all
-              </button>
-              <button
-                onClick={() => setExpanded(new Set())}
-                className="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
-              >
-                Collapse all
+                <StackIcon collapse={allExpanded} />
+                {allExpanded ? "Collapse all" : "Expand all"}
               </button>
 
               <span className="mx-1 h-5 w-px bg-slate-200" />
@@ -485,7 +526,7 @@ export default function AllocateClient() {
                 className="flex w-full items-center justify-between gap-2 text-left"
               >
                 <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-brand-600">
-                  <span className="text-slate-400">{expanded.has("pool") ? "▾" : "▸"}</span>
+                  <Chevron open={expanded.has("pool")} />
                   Unused pool
                 </h2>
                 <span className="text-xs text-slate-400">
@@ -517,7 +558,9 @@ export default function AllocateClient() {
                       className="flex w-full items-start justify-between gap-2 text-left"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="mt-1 text-slate-400">{isOpen ? "▾" : "▸"}</span>
+                        <span className="mt-0.5">
+                          <Chevron open={isOpen} />
+                        </span>
                         <div>
                           <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
                           <p className="text-xs text-slate-500">

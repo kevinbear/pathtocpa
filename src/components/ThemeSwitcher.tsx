@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useClickOutside } from "@/lib/hooks";
 
 export const THEMES = [
   { key: "teal", label: "Teal", color: "#14b8a6" },
@@ -17,6 +18,8 @@ export default function ThemeSwitcher() {
   const [theme, setTheme] = useState("teal");
   const [mode, setMode] = useState<"light" | "dark">("light");
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useClickOutside(rootRef, () => setOpen(false), open);
 
   useEffect(() => {
     const savedTheme = (typeof localStorage !== "undefined" && localStorage.getItem(THEME_KEY)) || "teal";
@@ -50,7 +53,7 @@ export default function ThemeSwitcher() {
   const current = THEMES.find((t) => t.key === theme) ?? THEMES[0];
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Change appearance"

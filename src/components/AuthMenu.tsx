@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAppData, type SyncStatus } from "@/lib/data/AppDataProvider";
+import { useClickOutside } from "@/lib/hooks";
 import ConfirmModal from "@/components/ConfirmModal";
 
 function SyncDot({ status }: { status: SyncStatus }) {
@@ -39,6 +40,10 @@ export default function AuthMenu() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const signinRef = useRef<HTMLDivElement>(null);
+  useClickOutside(accountRef, () => setAccountOpen(false), accountOpen);
+  useClickOutside(signinRef, () => setOpen(false), open);
 
   const statusColor = {
     local: "bg-slate-300",
@@ -51,7 +56,7 @@ export default function AuthMenu() {
 
   if (user) {
     return (
-      <div className="relative">
+      <div className="relative" ref={accountRef}>
         <button
           onClick={() => setAccountOpen((o) => !o)}
           title={user.email ?? "Account"}
@@ -159,7 +164,7 @@ export default function AuthMenu() {
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
   return (
-    <div className="relative">
+    <div className="relative" ref={signinRef}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-semibold text-oncolor hover:bg-brand-700"
