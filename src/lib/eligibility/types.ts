@@ -9,6 +9,8 @@ export type CourseCategory =
 
 export interface Course {
   id: string;
+  /** Optional course code / catalog number, e.g. "ACCT 415". */
+  code?: string;
   name: string;
   units: number;
   unitType: UnitType;

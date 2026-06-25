@@ -60,10 +60,9 @@ function targetFor(zone: string): { category: CourseCategory; subject?: string }
 }
 
 interface BoardState {
-  showNumber: boolean;
+  showCode: boolean;
   showSection: boolean;
   showSchool: boolean;
-  numberOf: (id: string) => number;
   selected: Set<string>;
   toggleSelect: (id: string) => void;
 }
@@ -92,9 +91,9 @@ function CourseChip({ course, overlay = false, warn }: { course: Course; overlay
     >
       {selected && <span className="text-brand-600">✓</span>}
       {warn && !selected && <span className="text-amber-500">⚠</span>}
-      {ctx?.showNumber && (
+      {ctx?.showCode && course.code && (
         <span className="rounded bg-slate-100 px-1 text-[10px] font-medium text-slate-500">
-          #{ctx.numberOf(course.id)}
+          {course.code}
         </span>
       )}
       <span className="max-w-[11rem] truncate text-slate-800">{course.name}</span>
@@ -232,18 +231,12 @@ export default function AllocateClient() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [showNumber, setShowNumber] = useState(false);
+  const [showCode, setShowCode] = useState(false);
   const [showSection, setShowSection] = useState(false);
   const [showSchool, setShowSchool] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const activeCourse = courses.find((c) => c.id === activeId) ?? null;
-
-  const numberMap = useMemo(() => {
-    const m = new Map<string, number>();
-    courses.forEach((c, i) => m.set(c.id, i + 1));
-    return m;
-  }, [courses]);
 
   const pool = useMemo(() => courses.filter((c) => c.category === "other"), [courses]);
   const poolGroups = useMemo(() => {
@@ -312,10 +305,9 @@ export default function AllocateClient() {
   }
 
   const board: BoardState = {
-    showNumber,
+    showCode,
     showSection,
     showSchool,
-    numberOf: (id) => numberMap.get(id) ?? 0,
     selected,
     toggleSelect,
   };
@@ -347,8 +339,8 @@ export default function AllocateClient() {
             {/* Toolbar: display toggles + selection actions */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="text-xs font-medium text-slate-500">Show on chips:</span>
-              <ToggleBtn active={showNumber} onClick={() => setShowNumber((v) => !v)}>
-                # Number
+              <ToggleBtn active={showCode} onClick={() => setShowCode((v) => !v)}>
+                Code
               </ToggleBtn>
               <ToggleBtn active={showSection} onClick={() => setShowSection((v) => !v)}>
                 Likely section

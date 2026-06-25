@@ -12,6 +12,7 @@ export type RawRow = Record<string, unknown>;
 
 /** An editable, all-strings representation of a row in the import preview. */
 export interface DraftCourse {
+  code: string;
   name: string;
   units: string;
   category: string; // canonical key ("accounting"...) or "" if unrecognized
@@ -42,6 +43,7 @@ function str(v: unknown): string {
 }
 
 const EMPTY_DRAFT: DraftCourse = {
+  code: "",
   name: "",
   units: "",
   category: "",
@@ -80,6 +82,7 @@ export function rawRowsToDrafts(rawRows: RawRow[]): ParseResult {
 
   const drafts: DraftCourse[] = rawRows
     .map((row) => ({
+      code: get(row, "code"),
       name: get(row, "name"),
       units: get(row, "units"),
       category: parseCategory(get(row, "category")),
@@ -89,7 +92,7 @@ export function rawRowsToDrafts(rawRows: RawRow[]): ParseResult {
       term: get(row, "term"),
     }))
     // Drop entirely-blank rows (common trailing rows in spreadsheets).
-    .filter((d) => d.name || d.units || d.institution || d.term);
+    .filter((d) => d.name || d.units || d.code || d.institution || d.term);
 
   return { drafts, missingColumns, empty: drafts.length === 0 };
 }
@@ -122,6 +125,7 @@ export function validateDraft(d: DraftCourse): DraftValidation {
     fieldErrors: {},
     messages: [],
     course: {
+      code: d.code.trim() || undefined,
       name: d.name.trim(),
       units,
       unitType: d.unitType as "semester" | "quarter",

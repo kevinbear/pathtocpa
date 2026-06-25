@@ -6,24 +6,34 @@ import ImportPanel from "@/components/coursework/ImportPanel";
 import RequirementProgressWidget from "@/components/coursework/RequirementProgressWidget";
 import ConfirmModal from "@/components/ConfirmModal";
 import { CATEGORIES } from "@/lib/eligibility/categories";
+import { ALLOCATION_TAXONOMY } from "@/lib/rules/allocationTaxonomy";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
 import type { Course, CourseCategory, UnitType } from "@/lib/eligibility/types";
 
+/** Sub-categories (subjects) per main category, from the CBA taxonomy. */
+const SUBCATS: Record<string, { id: string; label: string }[]> = Object.fromEntries(
+  ALLOCATION_TAXONOMY.map((s) => [s.key, s.subzones.map((z) => ({ id: z.id, label: z.label }))]),
+);
+
 type FormState = {
+  code: string;
   name: string;
   units: string;
   unitType: UnitType;
   category: CourseCategory;
+  subject: string;
   institution: string;
   term: string;
   completed: boolean;
 };
 
 const EMPTY_FORM: FormState = {
+  code: "",
   name: "",
   units: "",
   unitType: "semester",
   category: "accounting",
+  subject: "",
   institution: "",
   term: "",
   completed: true,
@@ -58,10 +68,12 @@ export default function CourseworkClient() {
       return setError("Units must be a number greater than 0.");
 
     const payload: Omit<Course, "id"> = {
+      code: form.code.trim() || undefined,
       name: form.name.trim(),
       units,
       unitType: form.unitType,
       category: form.category,
+      subject: form.subject || undefined,
       institution: form.institution.trim() || undefined,
       term: form.term.trim() || undefined,
       completed: form.completed,
@@ -110,6 +122,18 @@ export default function CourseworkClient() {
               </label>
 
               <label className="block text-sm">
+                <span className="mb-1 block font-medium text-slate-700">
+                  Course code <span className="text-slate-400">(optional)</span>
+                </span>
+                <input
+                  className={inputClass}
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                  placeholder="ACCT 415"
+                />
+              </label>
+
+              <label className="block text-sm">
                 <span className="mb-1 block font-medium text-slate-700">Units</span>
                 <input
                   className={inputClass}
@@ -140,7 +164,7 @@ export default function CourseworkClient() {
                   className={inputClass}
                   value={form.category}
                   onChange={(e) =>
-                    setForm({ ...form, category: e.target.value as CourseCategory })
+                    setForm({ ...form, category: e.target.value as CourseCategory, subject: "" })
                   }
                 >
                   {CATEGORIES.map((c) => (
@@ -153,6 +177,26 @@ export default function CourseworkClient() {
                   {CATEGORIES.find((c) => c.key === form.category)?.help}
                 </span>
               </label>
+
+              {(SUBCATS[form.category]?.length ?? 0) > 0 && (
+                <label className="sm:col-span-2 block text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">
+                    Sub-category <span className="text-slate-400">(optional)</span>
+                  </span>
+                  <select
+                    className={inputClass}
+                    value={form.subject}
+                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                  >
+                    <option value="">— General / unsorted —</option>
+                    {SUBCATS[form.category].map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-slate-700">
@@ -241,13 +285,15 @@ export default function CourseworkClient() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-100">
-              <table className="w-full min-w-[56rem] border-collapse text-sm">
+              <table className="w-full min-w-[76rem] border-collapse text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
+                    <th className="w-28 px-3 py-2 text-left">Code</th>
                     <th className="px-3 py-2 text-left">Course</th>
                     <th className="w-20 px-2 py-2">Units</th>
                     <th className="w-28 px-2 py-2">Type</th>
                     <th className="w-40 px-2 py-2">Category</th>
+                    <th className="w-44 px-2 py-2">Sub-category</th>
                     <th className="w-14 px-2 py-2">Done</th>
                     <th className="w-44 px-2 py-2 text-left">School</th>
                     <th className="w-36 px-2 py-2 text-left">Term</th>
@@ -264,7 +310,16 @@ export default function CourseworkClient() {
                     }`;
                     return (
                       <tr key={c.id} className={locked ? "bg-slate-50/40" : "bg-white"}>
-                        <td className="px-3 py-1">
+                        <td className="px-3 py-1 align-top">
+                          <input
+                            className={cls}
+                            value={c.code ?? ""}
+                            disabled={locked}
+                            placeholder="ACCT 415"
+                            onChange={(e) => updateCourse(c.id, { code: e.target.value || undefined })}
+                          />
+                        </td>
+                        <td className="px-3 py-1 align-top">
                           <input
                             className={cls}
                             value={c.name}
@@ -304,7 +359,9 @@ export default function CourseworkClient() {
                             className={cls}
                             value={c.category}
                             disabled={locked}
-                            onChange={(e) => updateCourse(c.id, { category: e.target.value as CourseCategory })}
+                            onChange={(e) =>
+                              updateCourse(c.id, { category: e.target.value as CourseCategory, subject: undefined })
+                            }
                           >
                             {CATEGORIES.map((cat) => (
                               <option key={cat.key} value={cat.key}>
@@ -312,6 +369,25 @@ export default function CourseworkClient() {
                               </option>
                             ))}
                           </select>
+                        </td>
+                        <td className="px-2 py-1 align-top">
+                          {(SUBCATS[c.category]?.length ?? 0) > 0 ? (
+                            <select
+                              className={cls}
+                              value={c.subject ?? ""}
+                              disabled={locked}
+                              onChange={(e) => updateCourse(c.id, { subject: e.target.value || undefined })}
+                            >
+                              <option value="">— general —</option>
+                              {SUBCATS[c.category].map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="block px-2 py-1 text-xs text-slate-300">—</span>
+                          )}
                         </td>
                         <td className="px-2 py-1 text-center align-top">
                           <input

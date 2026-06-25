@@ -2,6 +2,7 @@ import type { CourseCategory } from "../eligibility/types";
 
 /** The canonical fields we import into a Course. */
 export type DraftField =
+  | "code"
   | "name"
   | "units"
   | "category"
@@ -23,6 +24,7 @@ export function normalize(s: string): string {
 
 /** Accepted header aliases (normalized) → canonical field. */
 const HEADER_ALIASES: { field: DraftField; aliases: string[] }[] = [
+  { field: "code", aliases: ["code", "course code", "course number", "course no", "catalog", "catalog number", "course id"] },
   { field: "name", aliases: ["name", "course", "course name", "title", "class", "course title"] },
   { field: "units", aliases: ["units", "unit", "credits", "credit", "semester units", "unit count"] },
   { field: "category", aliases: ["category", "cat", "requirement", "subject"] },
@@ -97,6 +99,7 @@ export const COLUMN_DOCS: {
   accepts: string;
   example: string;
 }[] = [
+  { header: "code", required: false, accepts: "Course code / catalog number", example: "ACCT 415" },
   { header: "name", required: true, accepts: "Any text (the course name)", example: "Intermediate Accounting I" },
   { header: "units", required: true, accepts: "A number greater than 0", example: "3" },
   {
@@ -114,7 +117,7 @@ export const COLUMN_DOCS: {
 export const TEMPLATE_HEADERS = COLUMN_DOCS.map((c) => c.header);
 
 export const TEMPLATE_ROWS: string[][] = [
-  ["Intermediate Accounting I", "3", "accounting", "semester", "yes", "CSU Fullerton", "Fall 2025"],
-  ["Business Law", "3", "business", "semester", "yes", "CSU Fullerton", "Spring 2025"],
-  ["Accounting Ethics", "3", "ethics", "semester", "no", "CSU Fullerton", "Fall 2026"],
+  ["ACCT 301", "Intermediate Accounting I", "3", "accounting", "semester", "yes", "CSU Fullerton", "Fall 2025"],
+  ["BLAW 368", "Business Law", "3", "business", "semester", "yes", "CSU Fullerton", "Spring 2025"],
+  ["ACCT 507", "Accounting Ethics", "3", "ethics", "semester", "no", "CSU Fullerton", "Fall 2026"],
 ];

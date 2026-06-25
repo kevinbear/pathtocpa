@@ -246,6 +246,7 @@ export default function ImportPanel() {
             <table className="w-full min-w-[48rem] border-collapse text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
+                  <th className="px-2 py-2 w-24">Code</th>
                   <th className="px-2 py-2">Name</th>
                   <th className="px-2 py-2 w-20">Units</th>
                   <th className="px-2 py-2 w-28">Unit type</th>
@@ -262,6 +263,14 @@ export default function ImportPanel() {
                   const e = v.fieldErrors;
                   return (
                     <tr key={i} className={v.valid ? "" : "bg-red-50/40"}>
+                      <td className="px-2 py-1">
+                        <input
+                          className={fieldClass(false)}
+                          value={d.code}
+                          placeholder="ACCT 415"
+                          onChange={(ev) => updateDraft(i, { code: ev.target.value })}
+                        />
+                      </td>
                       <td className="px-2 py-1">
                         <input
                           className={fieldClass(!!e.name)}

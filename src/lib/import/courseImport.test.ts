@@ -3,6 +3,7 @@ import { rawRowsToDrafts, validateDraft, type DraftCourse } from "./courseImport
 
 function draft(overrides: Partial<DraftCourse> = {}): DraftCourse {
   return {
+    code: "",
     name: "Intermediate Accounting",
     units: "3",
     category: "accounting",
