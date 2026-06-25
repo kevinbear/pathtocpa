@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAppData, type SyncStatus } from "@/lib/data/AppDataProvider";
+import ConfirmModal from "@/components/ConfirmModal";
 
 function SyncDot({ status }: { status: SyncStatus }) {
   const map: Record<SyncStatus, { color: string; label: string }> = {
@@ -19,13 +20,14 @@ function SyncDot({ status }: { status: SyncStatus }) {
 }
 
 export default function AuthMenu() {
-  const { cloudEnabled, user, syncStatus, signIn, signUp, signOut } = useAppData();
+  const { cloudEnabled, user, syncStatus, signIn, signUp, signOut, clearAll } = useAppData();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   if (!cloudEnabled) return null;
 
@@ -37,11 +39,28 @@ export default function AuthMenu() {
           {user.email}
         </span>
         <button
+          onClick={() => setConfirmClear(true)}
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+        >
+          Clear data
+        </button>
+        <button
           onClick={() => signOut()}
           className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
         >
           Sign out
         </button>
+        <ConfirmModal
+          open={confirmClear}
+          title="Clear all your data?"
+          message="This permanently erases all coursework, costs, and progress for this account (here and in the cloud). This can't be undone."
+          confirmLabel="Clear everything"
+          onConfirm={() => {
+            clearAll();
+            setConfirmClear(false);
+          }}
+          onCancel={() => setConfirmClear(false)}
+        />
       </div>
     );
   }

@@ -71,6 +71,34 @@ function normalize(parsed: Partial<AppData> | null | undefined): AppData {
   };
 }
 
+// Per-identity localStorage keys so accounts never share a local cache.
+const ANON_KEY = `${STORAGE_KEY}.anon`;
+const userKey = (id: string) => `${STORAGE_KEY}.u.${id}`;
+
+function safeGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function safeSet(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore quota / privacy-mode errors
+  }
+}
+function loadLocal(key: string): AppData | null {
+  const raw = safeGet(key);
+  if (!raw) return null;
+  try {
+    return normalize(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(DEFAULT_APP_DATA);
   const [hydrated, setHydrated] = useState(false);
@@ -87,14 +115,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const readyToSaveRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 1) Load localStorage once on mount (client only) for instant local-first UI.
+  // 1) Mark hydrated on mount; the identity effect below loads the right data.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setData(normalize(JSON.parse(raw)));
-    } catch {
-      // Corrupt/unavailable storage — keep defaults.
-    }
     setHydrated(true);
   }, []);
 
@@ -113,14 +135,34 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // 3) On login, load the user's cloud data (or push local up if none exists yet).
+  // 3) Load the data for the CURRENT identity (anonymous or a specific user).
+  //    Each identity has its own localStorage cache + cloud row — they never mix.
   useEffect(() => {
-    const sb = supabase;
+    if (!hydrated) return;
     readyToSaveRef.current = false;
-    if (!sb || !user || !hydrated) return;
-
     let cancelled = false;
+
     (async () => {
+      if (!user) {
+        // Anonymous: load the anonymous cache (migrating the legacy shared key once).
+        let local = loadLocal(ANON_KEY);
+        if (!local) {
+          const legacy = loadLocal(STORAGE_KEY);
+          if (legacy) {
+            local = legacy;
+            safeSet(ANON_KEY, JSON.stringify(legacy));
+          }
+        }
+        applyingCloudRef.current = true;
+        setData(local ?? DEFAULT_APP_DATA);
+        setSyncStatus("local");
+        readyToSaveRef.current = true;
+        return;
+      }
+
+      // Logged in: the cloud row for THIS user is the source of truth.
+      const sb = supabase;
+      if (!sb) return;
       setSyncStatus("syncing");
       const { data: row, error } = await sb
         .from("user_data")
@@ -128,25 +170,27 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
-
       if (error) {
         setSyncStatus("error");
         return;
       }
 
       if (row && row.data) {
-        // Cloud wins: adopt the saved cloud state.
         applyingCloudRef.current = true;
         setData(normalize(row.data as Partial<AppData>));
         setSyncStatus("synced");
       } else {
-        // First login on this account — seed the cloud with current local data.
-        const { error: upErr } = await sb.from("user_data").upsert({
+        // Brand-new account: seed ONLY from this user's own local cache (usually
+        // empty) — never from another identity's data. Then create the cloud row.
+        const own = loadLocal(userKey(user.id)) ?? DEFAULT_APP_DATA;
+        applyingCloudRef.current = true;
+        setData(own);
+        await sb.from("user_data").upsert({
           user_id: user.id,
-          data: dataRef.current,
+          data: own,
           updated_at: new Date().toISOString(),
         });
-        setSyncStatus(upErr ? "error" : "synced");
+        setSyncStatus("synced");
       }
       readyToSaveRef.current = true;
     })();
@@ -156,15 +200,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, hydrated]);
 
-  // 4) Always mirror to localStorage (offline cache + local-only mode).
+  // 4) Mirror to the CURRENT identity's localStorage key (offline cache).
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // Ignore quota / privacy-mode errors.
-    }
-  }, [data, hydrated]);
+    safeSet(user ? userKey(user.id) : ANON_KEY, JSON.stringify(data));
+  }, [data, hydrated, user]);
 
   // 5) When logged in, debounce-save changes to the cloud.
   useEffect(() => {
