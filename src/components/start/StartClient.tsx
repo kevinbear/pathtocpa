@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import type { DegreeLevel, MastersField } from "@/lib/data/types";
@@ -45,11 +45,20 @@ const LICENSURE_PATHWAYS = [
 ];
 
 export default function StartClient() {
-  const { profile, setProfile } = useAppData();
+  const { hydrated, profile, setProfile } = useAppData();
   const [degreeLevel, setDegreeLevel] = useState<DegreeLevel>(profile.degreeLevel ?? "none");
   const [mastersField, setMastersField] = useState<MastersField>(profile.mastersField ?? "accounting");
   const [major, setMajor] = useState<MajorKind>(profile.undergradMajor ?? "accounting");
   const [saved, setSaved] = useState(false);
+
+  // The form initializes before saved data hydrates — sync the controls to the
+  // saved profile once it loads (and whenever the saved profile changes).
+  useEffect(() => {
+    if (!hydrated) return;
+    setDegreeLevel(profile.degreeLevel ?? "none");
+    setMastersField(profile.mastersField ?? "accounting");
+    setMajor(profile.undergradMajor ?? "accounting");
+  }, [hydrated, profile.degreeLevel, profile.mastersField, profile.undergradMajor]);
 
   const result = useMemo(
     () => diagnose({ degreeLevel, mastersField: degreeLevel === "masters" ? mastersField : undefined, major }),

@@ -353,6 +353,18 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Clear every app-data key for this site (cloud data re-pulls on next sign-in;
+    // UI prefs like theme/mode are not touched — they don't start with STORAGE_KEY).
+    if (typeof window !== "undefined") {
+      const toRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k && k.startsWith(STORAGE_KEY)) toRemove.push(k);
+      }
+      toRemove.forEach((k) => window.localStorage.removeItem(k));
+    }
+    applyingCloudRef.current = true;
+    setData(DEFAULT_APP_DATA);
     const sb = supabase;
     if (sb) await sb.auth.signOut();
   }, []);

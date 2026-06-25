@@ -40,6 +40,7 @@ export default function AuthMenu() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
   const signinRef = useRef<HTMLDivElement>(null);
   useClickOutside(accountRef, () => setAccountOpen(false), accountOpen);
@@ -118,7 +119,10 @@ export default function AuthMenu() {
                 Clear data
               </button>
               <button
-                onClick={() => signOut()}
+                onClick={() => {
+                  setConfirmSignOut(true);
+                  setAccountOpen(false);
+                }}
                 className="flex-1 rounded-full px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               >
                 Sign out
@@ -137,6 +141,23 @@ export default function AuthMenu() {
             setConfirmClear(false);
           }}
           onCancel={() => setConfirmClear(false)}
+        />
+
+        <ConfirmModal
+          open={confirmSignOut}
+          tone={storageMode === "cloud" ? "brand" : "danger"}
+          title="Sign out?"
+          message={
+            storageMode === "cloud"
+              ? "Your data is safely in the cloud — it'll be here when you sign back in. This browser's local copy is cleared on sign-out."
+              : "⚠ Your data is saved only on this device (local mode), not the cloud. Signing out removes it from this browser and it can't be recovered. To keep it, switch to Cloud above first, then sign out."
+          }
+          confirmLabel={storageMode === "cloud" ? "Sign out" : "Sign out & clear"}
+          onConfirm={() => {
+            setConfirmSignOut(false);
+            signOut();
+          }}
+          onCancel={() => setConfirmSignOut(false)}
         />
       </div>
     );
