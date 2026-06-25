@@ -27,6 +27,7 @@ import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
 import {
   classifyCourse,
   looksMismatched,
+  strictFit,
   ALLOC_CATEGORY_LABEL,
   type AllocCategory,
 } from "@/lib/rules/classify";
@@ -347,18 +348,21 @@ export default function AllocateClient() {
       }
     }
 
-    // Type: a course whose subject clearly doesn't fit this requirement can't go here.
+    // Type: a course may only enter a requirement it positively fits (strict).
     const expected = allocCat(t.category);
     if (expected) {
-      const bad = moved.filter((c) => looksMismatched(c.name, expected).mismatch);
+      const bad = moved
+        .map((c) => ({ c, fit: strictFit(c.name, expected) }))
+        .filter((x) => !x.fit.ok);
       if (bad.length > 0) {
-        const g = looksMismatched(bad[0].name, expected).guess;
+        const { c, fit } = bad[0];
+        const label = ALLOC_CATEGORY_LABEL[expected];
+        const oneReason = fit.guess
+          ? `“${c.name}” is a ${ALLOC_CATEGORY_LABEL[fit.guess]} course — it doesn't count toward ${label}.`
+          : `“${c.name}” doesn't read as a ${label} subject. Keep it in the Unused pool, or rename it in Coursework so it's recognized.`;
         return {
           ok: false,
-          reason:
-            bad.length === 1
-              ? `“${bad[0].name}” is a ${g ? ALLOC_CATEGORY_LABEL[g] : "different"} course — it doesn't count toward ${ALLOC_CATEGORY_LABEL[expected]}.`
-              : `${bad.length} of these don't count toward ${ALLOC_CATEGORY_LABEL[expected]}.`,
+          reason: bad.length === 1 ? oneReason : `${bad.length} of these don't count toward ${label}.`,
         };
       }
     }

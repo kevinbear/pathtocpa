@@ -35,7 +35,7 @@ const RULES: { re: RegExp; subject: string; category: AllocCategory }[] = [
   { re: /market/, subject: "bus-marketing", category: "business" },
   { re: /statistic|probabilit/, subject: "bus-statistics", category: "business" },
   {
-    re: /computer science|information systems|programming|software|data structure|database|digital logic|assembly|data mining/,
+    re: /computer science|information systems|programming|program design|software|systems analysis|web develop|web application|\bnetwork|operating system|data structure|database|digital logic|assembly|data mining|data science|analytics|machine learning|artificial intelligence/,
     subject: "bus-cs",
     category: "business",
   },
@@ -43,7 +43,11 @@ const RULES: { re: RegExp; subject: string; category: AllocCategory }[] = [
   { re: /finance|financial management|corporate finance|investment/, subject: "bus-finance", category: "business" },
   { re: /communicat|journalism|english/, subject: "bus-comms", category: "business" },
   { re: /administration/, subject: "bus-admin", category: "business" },
-  { re: /management|organization|human resource|leadership/, subject: "bus-management", category: "business" },
+  {
+    re: /management|organization|human resource|leadership|operations|supply chain|project management|entrepreneur/,
+    subject: "bus-management",
+    category: "business",
+  },
 ];
 
 export function classifyCourse(name: string): Classification {
@@ -82,4 +86,19 @@ export function looksMismatched(
   const guess = classifyCourse(name).category;
   if (!guess) return { mismatch: false, guess: null };
   return { mismatch: !ACCEPTS[expected].includes(guess), guess };
+}
+
+/**
+ * Strict check used to hard-block drops: a course may enter a requirement only
+ * if it POSITIVELY classifies as a type that requirement accepts. An
+ * unrecognized course (guess === null) does not positively fit, so it's blocked
+ * out of the subject requirements (it can still live in the Unused pool).
+ */
+export function strictFit(
+  name: string,
+  expected: AllocCategory,
+): { ok: boolean; guess: AllocCategory | null } {
+  const guess = classifyCourse(name).category;
+  if (!guess) return { ok: false, guess: null };
+  return { ok: ACCEPTS[expected].includes(guess), guess };
 }
