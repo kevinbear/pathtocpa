@@ -30,20 +30,31 @@ export const GUIDES: Guide[] = [
     emoji: "📄",
     title: "Request your official transcripts",
     summary:
-      "The CBA needs OFFICIAL transcripts sent directly from each school you attended — transcripts that pass through your own hands usually aren't accepted.",
+      "The CBA needs OFFICIAL transcripts from EVERY school where you earned units — community college AND university, not just the one that granted your degree — sent directly from the school.",
     steps: [
-      "Log in to each school's registrar / records portal (often the National Student Clearinghouse or your campus system).",
-      "Order an official transcript for every institution where you earned units that count.",
-      "Send each one directly to the California Board of Accountancy (electronic delivery or mail, per the CBA's instructions).",
-      "Keep your order confirmations until the CBA confirms receipt.",
+      "List every institution where you earned units that count — community colleges, transfer schools, your degree-granting university, and any study-abroad/foreign school.",
+      "For each U.S. school, order an official transcript from its registrar (often via the National Student Clearinghouse) and have it sent DIRECTLY to the CBA — one you carry yourself usually isn't accepted.",
+      "Studied abroad? Foreign transcripts can't go straight to the CBA — first have them evaluated by a CBA-approved foreign credentials evaluation service, which then sends the evaluation to the CBA.",
+      "Keep every order and evaluation confirmation until the CBA confirms it has received them all.",
     ],
     links: [
-      { label: "CBA — Educational Requirements", url: "https://www.dca.ca.gov/cba/applicants/" },
-      { label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" },
+      {
+        label: "CBA — Approved foreign credential evaluators",
+        url: "https://www.dca.ca.gov/cba/applicants/foreign.shtml",
+      },
+      {
+        label: "CBA — Send transcripts electronically",
+        url: "https://www.dca.ca.gov/cba/send_transcripts_electronically.shtml",
+      },
+      {
+        label: "CBA — Educational requirements",
+        url: "https://www.dca.ca.gov/cba/applicants/ed-requirements.shtml",
+      },
     ],
     tips: [
-      "Order early — transcripts can take 1–2 weeks to arrive.",
-      "Foreign coursework must be evaluated by a CBA-approved credential evaluation service first.",
+      "Order early — U.S. transcripts take 1–2 weeks; a foreign credential evaluation can take several weeks.",
+      "Don't skip the small schools: a 3-unit community-college course can be exactly what tips you over a requirement.",
+      "Foreign coursework MUST be evaluated by a CBA-approved service first — pick one from the approved list above.",
     ],
   },
   {
