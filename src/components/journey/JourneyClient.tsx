@@ -12,6 +12,7 @@ import {
 import californiaRuleSet from "@/lib/rules/california";
 import ProgressRing from "@/components/ProgressRing";
 import StatusBadge from "@/components/StatusBadge";
+import ExamWindows from "@/components/journey/ExamWindows";
 import type { ExamSection } from "@/lib/data/types";
 
 export default function JourneyClient() {
@@ -134,6 +135,10 @@ export default function JourneyClient() {
               <p className="font-semibold text-slate-900">Overall progress</p>
               <p className="text-sm text-slate-600">{journey.nextStep}</p>
             </div>
+          </div>
+
+          <div className="mb-8">
+            <ExamWindows />
           </div>
 
           <ol className="relative space-y-4 border-l-2 border-slate-100 pl-10">

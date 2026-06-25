@@ -32,6 +32,14 @@ export interface Profile {
   examSectionsPassed: ExamSection[];
   /** Chosen discipline section, if decided. */
   disciplineChoice?: Discipline;
+
+  // --- Exam deadline windows (ISO yyyy-mm-dd; each starts a countdown) ---
+  /** Payment coupon / Authorization to Test issued — starts the 90-day pay window. */
+  attIssuedDate?: string;
+  /** Notice to Schedule issued — starts the 9-month schedule-&-sit window. */
+  ntsIssuedDate?: string;
+  /** First section's score released — starts the 30-month conditional-credit window. */
+  firstSectionPassedDate?: string;
   /** Months of qualifying accounting experience completed (12 required). */
   experienceMonths: number;
   /** Passed the PETH professional ethics exam. */
