@@ -382,7 +382,7 @@ export default function CourseworkClient() {
               )}
               {courses.length > 0 && (
                 <Link
-                  href="/allocate"
+                  href="/allocate?from=coursework"
                   className="rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-oncolor hover:bg-brand-700"
                 >
                   Allocate courses →

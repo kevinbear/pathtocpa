@@ -1,7 +1,7 @@
 "use client";
 import { LoadingSkeleton } from "@/components/Skeleton";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -285,9 +285,21 @@ function StackIcon({ collapse }: { collapse: boolean }) {
   );
 }
 
+const BACK_TARGETS: Record<string, { href: string; label: string }> = {
+  breakdown: { href: "/eligibility/breakdown", label: "breakdown" },
+  coursework: { href: "/coursework", label: "coursework" },
+  eligibility: { href: "/eligibility", label: "eligibility" },
+};
+
 export default function AllocateClient() {
   const { hydrated, courses, profile, updateCourse } = useAppData();
   const accountingStudyWaived = profileWaivesAccountingStudy(profile);
+  // Where the "← Back" link points, based on the page that linked here (?from=…).
+  const [back, setBack] = useState(BACK_TARGETS.breakdown);
+  useEffect(() => {
+    const from = new URLSearchParams(window.location.search).get("from");
+    if (from && BACK_TARGETS[from]) setBack(BACK_TARGETS[from]);
+  }, []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [dropError, setDropError] = useState<string | null>(null);
@@ -430,8 +442,8 @@ export default function AllocateClient() {
     <BoardCtx.Provider value={board}>
       <main className="mx-auto max-w-[104rem] px-6 py-12">
         <div className="mb-6">
-          <Link href="/eligibility/breakdown" className="text-sm font-medium text-brand-700 hover:underline">
-            ← Back to breakdown
+          <Link href={back.href} className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">
+            ← Back to {back.label}
           </Link>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Allocate Courses</h1>
           <p className="mt-2 max-w-3xl text-slate-600">
@@ -472,7 +484,7 @@ export default function AllocateClient() {
               <span className="mx-1 h-5 w-px bg-slate-200" />
               <button
                 onClick={() => setExpanded(allExpanded ? new Set() : new Set(ALL_KEYS))}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50"
               >
                 <StackIcon collapse={allExpanded} />
                 {allExpanded ? "Collapse all" : "Expand all"}

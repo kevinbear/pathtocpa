@@ -9,6 +9,9 @@ the cloud if you sign in.
 > ⚠️ **Not official advice.** This is a planning aid. Requirements and fees change —
 > always confirm with the [California Board of Accountancy (CBA)](https://www.dca.ca.gov/cba/).
 
+**📖 New here?** Read the **[User Guide](docs/USER_GUIDE.md)** — a step-by-step walkthrough
+with diagrams. (There's an in-app version too: Footer → **FAQ & how to use**.)
+
 ---
 
 ## ✨ Features
@@ -16,10 +19,11 @@ the cloud if you sign in.
 - **✅ Eligibility checker** — add your coursework and instantly see whether you meet the
   education requirements to **sit for the CPA Exam** and to be **licensed** (the 150-unit
   rule), with an exact list of what's still missing. Powered by a tested rules engine.
-- **🧭 Journey tracker** — see which of the four stages (Education → Exam → Experience →
-  Ethics & License) you're in, what to do next, and your **% complete** per stage and overall.
+- **🧭 Journey tracker** — follow the real California flow: qualify to sit, then the exam and
+  experience **in parallel**, then finish licensure education and apply — with what to do next
+  and your **% complete** per step and overall.
 - **💰 Cost planner** — itemize every expense (review course, exam fees, transcripts, CBA
-  application, Live Scan, PETH, certified mail, commute…), track **planned vs paid**, see a
+  application, Live Scan, certified mail, commute…), track **planned vs paid**, see a
   spending-by-category breakdown, and **export to CSV**. Seeded with a California template.
 - **📥 CSV / Excel import** — bulk-add courses from a spreadsheet with an **editable,
   validated preview**, downloadable templates, and an in-app tutorial. Files are parsed
@@ -31,7 +35,7 @@ the cloud if you sign in.
 - **🎓 Degree-aware rules** — a master's in Accounting/Taxation/Laws-in-Taxation waives the
   Accounting Study requirement; accounting units beyond 24 count toward business-related.
 - **📚 Editable coursework table** — edit any cell inline; imported rows lock by default.
-- **🧭 Step-by-step CBA guides** — transcripts, exam application, Live Scan, PETH, and more.
+- **🧭 Step-by-step CBA guides** — transcripts, exam application, Live Scan, licensing, and more.
 - **🎨 Color themes** — pick teal, indigo, violet, emerald, or rose.
 
 ---

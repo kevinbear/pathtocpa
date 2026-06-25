@@ -218,7 +218,7 @@ export default function BreakdownClient() {
             ← Back to eligibility
           </Link>
           <Link
-            href="/allocate"
+            href="/allocate?from=breakdown"
             className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-semibold text-oncolor hover:bg-brand-700"
           >
             Drag-and-drop allocate →
