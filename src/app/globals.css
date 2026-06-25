@@ -60,6 +60,26 @@
   }
 }
 
+/* Dark-mode accent legibility. The teal accent scale is fixed across light/dark,
+   so its darker shades (brand 600/700) and the delete-red lose contrast on dark
+   card surfaces. Lighten them, and darken the light hover fills so hovered text
+   stays readable. (Unlayered so it beats Tailwind's utilities layer.) */
+.dark .text-brand-700 {
+  color: rgb(var(--brand-300));
+}
+.dark .text-brand-600 {
+  color: rgb(var(--brand-300));
+}
+.dark .text-red-600 {
+  color: #f87171;
+}
+.dark .hover\:bg-brand-50:hover {
+  background-color: rgb(var(--brand-900) / 0.4);
+}
+.dark .hover\:bg-red-50:hover {
+  background-color: rgb(127 29 29 / 0.4);
+}
+
 /* Accent themes — RGB triplets consumed by Tailwind's `brand` color scale.
    Default (no data-theme / "teal") below; others override via [data-theme]. */
 :root,

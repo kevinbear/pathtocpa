@@ -208,7 +208,7 @@ export default function JourneyClient() {
                 <p className="mt-1 text-sm text-slate-600">{journey.nextStep}</p>
               ) : (
                 <div className="mt-2 inline-flex flex-col gap-0.5 rounded-xl bg-brand-50 px-3 py-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-700">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-800">
                     👉 Your next step
                   </span>
                   <span className="text-sm font-medium text-brand-900">{journey.nextStep}</span>

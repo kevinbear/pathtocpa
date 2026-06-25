@@ -61,7 +61,7 @@ export default function AuthMenu() {
           onClick={() => setAccountOpen((o) => !o)}
           title={user.email ?? "Account"}
           aria-label={`Account: ${user.email}`}
-          className="relative flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 transition hover:ring-2 hover:ring-brand-300"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-800 ring-1 ring-brand-200 transition hover:ring-2 hover:ring-brand-300"
         >
           {(user.email?.[0] ?? "U").toUpperCase()}
           <span

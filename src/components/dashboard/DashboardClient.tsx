@@ -66,8 +66,8 @@ export default function DashboardClient() {
           Path<span className="text-brand-600">To</span>CPA
         </h1>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Your personal CPA licensure planner — eligibility, stages, and (soon)
-          costs, all in one place.
+          Your personal CPA licensure planner — eligibility, stages, and costs,
+          all in one place.
         </p>
       </header>
 
