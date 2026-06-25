@@ -2,6 +2,7 @@
 import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import ImportPanel from "@/components/coursework/ImportPanel";
 import RequirementProgressWidget from "@/components/coursework/RequirementProgressWidget";
@@ -203,7 +204,7 @@ export default function CourseworkClient() {
       </div>
 
         {/* Import + add form, side by side. The form fades out while importing. */}
-        <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[27rem_minmax(0,1fr)]"}`}>
+        <div className={`grid max-w-7xl items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_30rem]"}`}>
           <ImportPanel onPreviewActive={setImporting} />
 
           <div
@@ -374,10 +375,18 @@ export default function CourseworkClient() {
               {courses.length > 0 && (
                 <button
                   onClick={toggleLockAll}
-                  className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+                  className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 dark:text-brand-300"
                 >
                   {allLocked ? "🔓 Unlock all" : "🔒 Lock all"}
                 </button>
+              )}
+              {courses.length > 0 && (
+                <Link
+                  href="/allocate"
+                  className="rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-oncolor hover:bg-brand-700"
+                >
+                  Allocate courses →
+                </Link>
               )}
             </div>
             <p className="text-xs text-slate-400">
