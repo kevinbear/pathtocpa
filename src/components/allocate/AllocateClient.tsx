@@ -234,6 +234,16 @@ export default function AllocateClient() {
   const [showCode, setShowCode] = useState(false);
   const [showSection, setShowSection] = useState(false);
   const [showSchool, setShowSchool] = useState(false);
+  // Sections are collapsed by default; expand to work inside them.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const ALL_KEYS = useMemo(() => ["pool", ...ALLOCATION_TAXONOMY.map((s) => s.key)], []);
+  const toggleExpand = (k: string) =>
+    setExpanded((p) => {
+      const n = new Set(p);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const activeCourse = courses.find((c) => c.id === activeId) ?? null;
@@ -350,6 +360,20 @@ export default function AllocateClient() {
               </ToggleBtn>
 
               <span className="mx-1 h-5 w-px bg-slate-200" />
+              <button
+                onClick={() => setExpanded(new Set(ALL_KEYS))}
+                className="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+              >
+                Expand all
+              </button>
+              <button
+                onClick={() => setExpanded(new Set())}
+                className="rounded-full px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+              >
+                Collapse all
+              </button>
+
+              <span className="mx-1 h-5 w-px bg-slate-200" />
 
               {selected.size > 0 ? (
                 <>
@@ -399,15 +423,23 @@ export default function AllocateClient() {
 
             {/* Unused pool */}
             <div className="card mb-6">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
+              <button
+                onClick={() => toggleExpand("pool")}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-brand-600">
+                  <span className="text-slate-400">{expanded.has("pool") ? "▾" : "▸"}</span>
                   Unused pool
                 </h2>
                 <span className="text-xs text-slate-400">
                   {pool.length} course(s) · {sum(pool)} units
                 </span>
-              </div>
-              <PoolZone groups={poolGroups} total={pool.length} />
+              </button>
+              {expanded.has("pool") && (
+                <div className="mt-3">
+                  <PoolZone groups={poolGroups} total={pool.length} />
+                </div>
+              )}
             </div>
 
             {/* Requirement sections */}
@@ -420,10 +452,22 @@ export default function AllocateClient() {
                 const generalCourses = inSection.filter(
                   (c) => !c.subject || !section.subzones.some((z) => z.id === c.subject),
                 );
+                const isOpen = expanded.has(section.key);
                 return (
-                  <div key={section.key} className="card">
-                    <div className="mb-3 flex items-start justify-between gap-2">
-                      <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
+                  <div key={section.key} className="card h-fit">
+                    <button
+                      onClick={() => toggleExpand(section.key)}
+                      className="flex w-full items-start justify-between gap-2 text-left"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="mt-1 text-slate-400">{isOpen ? "▾" : "▸"}</span>
+                        <div>
+                          <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
+                          <p className="text-xs text-slate-500">
+                            {inSection.length} course{inSection.length === 1 ? "" : "s"} placed
+                          </p>
+                        </div>
+                      </div>
                       <span className={`pill ${met ? "bg-brand-100 text-brand-800" : "bg-amber-100 text-amber-800"}`}>
                         {waived ? (
                           "Waived ✓"
@@ -434,17 +478,19 @@ export default function AllocateClient() {
                           </>
                         )}
                       </span>
-                    </div>
+                    </button>
 
-                    {waived && (
-                      <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
-                        ✅ Met automatically by your master&apos;s degree in accounting, taxation, or
-                        laws in taxation — you don&apos;t need to allocate courses here.
-                      </p>
-                    )}
+                    {isOpen && (
+                      <div className="mt-3">
+                        {waived && (
+                          <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+                            ✅ Met automatically by your master&apos;s degree in accounting, taxation, or
+                            laws in taxation — you don&apos;t need to allocate courses here.
+                          </p>
+                        )}
 
-                    <div className="space-y-2">
-                      {section.subzones.map((zone) => {
+                        <div className="space-y-2">
+                          {section.subzones.map((zone) => {
                         const zoneCourses = courses.filter((c) => c.subject === zone.id);
                         return (
                           <DropZone
@@ -475,8 +521,10 @@ export default function AllocateClient() {
                         <p className="mb-1.5 text-xs font-medium text-slate-500">
                           In {section.title} (unsorted)
                         </p>
-                      </DropZone>
-                    </div>
+                          </DropZone>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
