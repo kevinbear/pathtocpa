@@ -10,6 +10,40 @@ import californiaRuleSet from "@/lib/rules/california";
 const selectClass =
   "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
+/** California's licensure routes. The 120-unit route is new under AB 1175 (effective Jan 1, 2027). */
+const LICENSURE_PATHWAYS = [
+  {
+    key: "traditional",
+    name: "150-credit traditional route",
+    education:
+      "Bachelor's + 30 more units — 150 total, including 24 accounting, 24 business-related, 20 accounting study, and 10 ethics study.",
+    experience: "1 year of supervised general accounting experience.",
+    note: undefined as string | undefined,
+    badge: "Available now",
+    isNew: false,
+  },
+  {
+    key: "graduate",
+    name: "Graduate degree route",
+    education:
+      "A qualifying master's (or post-baccalaureate) in accounting or taxation, within the 150 units.",
+    experience:
+      "1 year of supervised experience — the advanced degree substitutes for the second year.",
+    note: undefined as string | undefined,
+    badge: "Available now",
+    isNew: false,
+  },
+  {
+    key: "ab1175",
+    name: "120-credit bachelor's route",
+    education: "Bachelor's degree with an accounting concentration — 120 semester units.",
+    experience: "2 years of general accounting experience, supervised by a licensed CPA.",
+    note: "A qualifying master's can substitute for 1 year (or an approved certificate program for 6 months).",
+    badge: "New — from Jan 1, 2027",
+    isNew: true,
+  },
+];
+
 export default function StartClient() {
   const { profile, setProfile } = useAppData();
   const [degreeLevel, setDegreeLevel] = useState<DegreeLevel>(profile.degreeLevel ?? "none");
@@ -164,6 +198,74 @@ export default function StartClient() {
           );
         })}
       </div>
+
+      {/* The three CA licensure pathways */}
+      <section className="mt-12">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          The three California licensure pathways
+        </h2>
+        <p className="mb-4 max-w-3xl text-sm text-slate-600">
+          There&apos;s more than one road to the license. Today the 150-unit and graduate routes
+          apply. Starting <strong>January 1, 2027</strong>, California&apos;s AB 1175 adds a
+          120-unit + 2-year route. During 2027–2028 both the old and new rules are valid; from 2029
+          only the new requirements remain.
+        </p>
+        <div className="grid gap-5 md:grid-cols-3">
+          {LICENSURE_PATHWAYS.map((p) => (
+            <div
+              key={p.key}
+              className={`card ${p.isNew ? "border-amber-200 ring-1 ring-amber-100" : ""}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-semibold text-slate-900">{p.name}</h3>
+                <span
+                  className={`pill shrink-0 ${
+                    p.isNew ? "bg-amber-100 text-amber-800" : "bg-brand-100 text-brand-800"
+                  }`}
+                >
+                  {p.badge}
+                </span>
+              </div>
+              <div className="mt-3 space-y-3 text-sm">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Education
+                  </p>
+                  <p className="text-slate-700">{p.education}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Experience
+                  </p>
+                  <p className="text-slate-700">{p.experience}</p>
+                </div>
+                {p.note && <p className="text-xs text-slate-500">{p.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-slate-400">
+          Sources:{" "}
+          <a
+            href="https://www.calcpa.org/whats-happening/press/governor-signs-ab-1175-modernizing-cpa-licensure-in-california"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            CalCPA — AB 1175
+          </a>{" "}
+          ·{" "}
+          <a
+            href="https://www.dca.ca.gov/cba/outreach/guide-to-the-new-cpa-licensure-requirements.shtml"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            CBA — new licensure requirements
+          </a>
+          .
+        </p>
+      </section>
 
       <p className="mt-8 text-xs text-slate-400">
         This is a planning aid, not official advice. Requirements vary — always confirm with the{" "}
