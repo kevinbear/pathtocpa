@@ -22,12 +22,16 @@ original milestone plan and [ARCHITECTURE.md](ARCHITECTURE.md) for the design.
 - [x] **Color theme** switcher (teal / indigo / violet / emerald / rose)
 - [x] Coursework **editable table** with inline cell editing + lock/unlock for imports
 - [x] Step-by-step **CBA guides** (transcripts, exam, Live Scan, PETH, license)
+- [x] Cost **installments** (per-expense % paid)
+- [x] **Color themes** + **dark mode**
+- [x] Coursework: floating progress widget, delete confirmation, default-locked rows
+- [x] **Drag-and-drop Allocate board** (full nested subject taxonomy + unused pool, dnd-kit)
 
 ## 🔜 Not yet implemented / ideas
 
 **Eligibility accuracy**
-- [ ] Enforce Accounting Study sub-caps (≥6 accounting, ≤14 business, ≤3 per "other" category)
-- [ ] Enforce the ≥3-unit accounting-ethics minimum within the 10 ethics units
+- [ ] Enforce Accounting Study / Ethics sub-caps in the eligibility *verdict* (the Allocate
+      board already shows them as guidance via the `subject` field — wire them into the engine)
 - [ ] Foreign credential evaluation flow (currently only mentioned in guides)
 
 **Features**

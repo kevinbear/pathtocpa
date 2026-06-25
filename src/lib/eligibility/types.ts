@@ -19,6 +19,8 @@ export interface Course {
   completed: boolean;
   /** Imported rows are locked by default (read-only until unlocked). */
   locked?: boolean;
+  /** Fine-grained sub-zone id within a category, set by the Allocate board. */
+  subject?: string;
 }
 
 export interface Contributor {

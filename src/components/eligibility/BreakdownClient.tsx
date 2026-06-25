@@ -187,9 +187,17 @@ export default function BreakdownClient() {
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
       <div className="mb-6">
-        <Link href="/eligibility" className="text-sm font-medium text-brand-700 hover:underline">
-          ← Back to eligibility
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/eligibility" className="text-sm font-medium text-brand-700 hover:underline">
+            ← Back to eligibility
+          </Link>
+          <Link
+            href="/allocate"
+            className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-semibold text-oncolor hover:bg-brand-700"
+          >
+            Drag-and-drop allocate →
+          </Link>
+        </div>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
           Requirement Breakdown
         </h1>
