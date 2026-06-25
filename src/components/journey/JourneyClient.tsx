@@ -226,7 +226,13 @@ export default function JourneyClient() {
             </ProgressRing>
             <div>
               <p className="font-semibold text-slate-900">Overall progress</p>
-              <p className="text-sm text-slate-600">{journey.nextStep}</p>
+              {journey.allComplete ? (
+                <p className="text-sm text-slate-600">{journey.nextStep}</p>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  <span className="font-medium text-brand-700">Next up:</span> {journey.nextStep}
+                </p>
+              )}
             </div>
           </div>
 
