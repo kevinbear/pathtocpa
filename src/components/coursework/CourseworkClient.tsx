@@ -16,6 +16,11 @@ const SUBCATS: Record<string, { id: string; label: string }[]> = Object.fromEntr
   ALLOCATION_TAXONOMY.map((s) => [s.key, s.subzones.map((z) => ({ id: z.id, label: z.label }))]),
 );
 
+/** Shorten with a trailing "*" to signal there's more text than fits. */
+function truncStar(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max).trimEnd()}*` : s;
+}
+
 type FormState = {
   code: string;
   name: string;
@@ -296,11 +301,11 @@ export default function CourseworkClient() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-100">
-              <table className="w-full min-w-[76rem] border-collapse text-sm">
+              <table className="w-full min-w-[94rem] border-collapse text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="w-28 px-3 py-2 text-left">Code</th>
-                    <th className="px-3 py-2 text-left">Course</th>
+                    <th className="w-32 px-3 py-2 text-left">Code</th>
+                    <th className="min-w-[20rem] px-3 py-2 text-left">Course</th>
                     <th className="w-20 px-2 py-2">Units</th>
                     <th className="w-28 px-2 py-2">Type</th>
                     <th className="w-40 px-2 py-2">Category</th>
@@ -322,21 +327,36 @@ export default function CourseworkClient() {
                     return (
                       <tr key={c.id} className={locked ? "bg-slate-50/40" : "bg-white"}>
                         <td className="px-3 py-1 align-top">
-                          <input
-                            className={cls}
-                            value={c.code ?? ""}
-                            disabled={locked}
-                            placeholder="ACCT 415"
-                            onChange={(e) => updateCourse(c.id, { code: e.target.value || undefined })}
-                          />
+                          {locked ? (
+                            <span
+                              title={c.code || undefined}
+                              className="block w-full overflow-hidden whitespace-nowrap px-2 py-1 text-sm text-slate-500"
+                            >
+                              {truncStar(c.code ?? "", 14)}
+                            </span>
+                          ) : (
+                            <input
+                              className={cls}
+                              value={c.code ?? ""}
+                              onChange={(e) => updateCourse(c.id, { code: e.target.value || undefined })}
+                            />
+                          )}
                         </td>
                         <td className="px-3 py-1 align-top">
-                          <input
-                            className={cls}
-                            value={c.name}
-                            disabled={locked}
-                            onChange={(e) => updateCourse(c.id, { name: e.target.value })}
-                          />
+                          {locked ? (
+                            <span
+                              title={c.name}
+                              className="block w-full overflow-hidden whitespace-nowrap px-2 py-1 text-sm text-slate-600"
+                            >
+                              {truncStar(c.name, 40)}
+                            </span>
+                          ) : (
+                            <input
+                              className={cls}
+                              value={c.name}
+                              onChange={(e) => updateCourse(c.id, { name: e.target.value })}
+                            />
+                          )}
                         </td>
                         <td className="px-2 py-1 align-top">
                           <input
