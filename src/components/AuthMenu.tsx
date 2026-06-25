@@ -40,6 +40,13 @@ export default function AuthMenu() {
   const [busy, setBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
+  const statusColor = {
+    local: "bg-slate-300",
+    syncing: "bg-amber-400",
+    synced: "bg-brand-500",
+    error: "bg-red-500",
+  }[syncStatus];
+
   if (!cloudEnabled) return null;
 
   if (user) {
@@ -47,18 +54,22 @@ export default function AuthMenu() {
       <div className="relative">
         <button
           onClick={() => setAccountOpen((o) => !o)}
-          className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-100"
+          title={user.email ?? "Account"}
+          aria-label={`Account: ${user.email}`}
+          className="relative flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 transition hover:ring-2 hover:ring-brand-300"
         >
-          <SyncDot status={syncStatus} />
-          <span className="hidden max-w-[10rem] truncate text-xs text-slate-500 sm:inline">
-            {user.email}
-          </span>
-          <span className="text-xs text-slate-400">⌄</span>
+          {(user.email?.[0] ?? "U").toUpperCase()}
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${statusColor}`}
+          />
         </button>
 
         {accountOpen && (
           <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-slate-100">
-            <p className="px-1 pb-2 text-xs text-slate-400 truncate">{user.email}</p>
+            <div className="flex items-center justify-between gap-2 px-1 pb-2">
+              <p className="truncate text-xs text-slate-500">{user.email}</p>
+              <SyncDot status={syncStatus} />
+            </div>
 
             <p className="px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               Where to save your data
@@ -91,19 +102,19 @@ export default function AuthMenu() {
                 : "Stored only in this browser for this account — not uploaded, and not on other devices."}
             </p>
 
-            <div className="mt-3 border-t border-slate-100 pt-2">
+            <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
               <button
                 onClick={() => {
                   setConfirmClear(true);
                   setAccountOpen(false);
                 }}
-                className="block w-full rounded-xl px-1 py-1.5 text-left text-sm text-red-600 hover:bg-red-50"
+                className="flex-1 rounded-full px-3 py-1.5 text-sm font-semibold text-red-600 ring-1 ring-red-200 hover:bg-red-50"
               >
-                Clear all my data
+                Clear data
               </button>
               <button
                 onClick={() => signOut()}
-                className="block w-full rounded-xl px-1 py-1.5 text-left text-sm text-slate-600 hover:bg-slate-50"
+                className="flex-1 rounded-full px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               >
                 Sign out
               </button>

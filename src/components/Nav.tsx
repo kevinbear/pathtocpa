@@ -24,11 +24,11 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-        <Link href="/" className="text-lg font-bold tracking-tight text-slate-900">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+        <Link href="/" className="shrink-0 text-lg font-bold tracking-tight text-slate-900">
           Path<span className="text-brand-600">To</span>CPA
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ul className="flex items-center gap-1 text-sm">
             {links.slice(1).map((l) => (
               <li key={l.href}>
@@ -45,8 +45,10 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <ThemeSwitcher />
-          <AuthMenu />
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <ThemeSwitcher />
+            <AuthMenu />
+          </div>
         </div>
       </nav>
     </header>
