@@ -2,6 +2,7 @@
 import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABEL } from "@/lib/costs/categories";
 import { summarize, formatUSD } from "@/lib/costs/summary";
@@ -40,6 +41,210 @@ const EMPTY_FORM: FormState = {
   installmentsPaid: "0",
 };
 
+const inputClass =
+  "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
+
+/** Validate a form and build an expense payload, or return an error message. */
+function formToPayload(form: FormState): { payload?: Omit<Expense, "id">; error?: string } {
+  const amount = Number(form.amount);
+  if (!form.label.trim()) return { error: "Please enter a label." };
+  if (!Number.isFinite(amount) || amount < 0) return { error: "Amount must be 0 or greater." };
+
+  const isInstallment = form.paymentMethod === "installment";
+  const total = Math.max(1, Math.floor(Number(form.installmentsTotal) || 1));
+  const paidCount = Math.min(total, Math.max(0, Math.floor(Number(form.installmentsPaid) || 0)));
+
+  return {
+    payload: {
+      label: form.label.trim(),
+      category: form.category,
+      amount,
+      status: isInstallment ? (paidCount >= total ? "paid" : "planned") : form.status,
+      notes: form.notes.trim() || undefined,
+      paymentMethod: form.paymentMethod,
+      installmentsTotal: isInstallment ? total : undefined,
+      installmentsPaid: isInstallment ? paidCount : undefined,
+    },
+  };
+}
+
+function expenseToForm(e: Expense): FormState {
+  return {
+    label: e.label,
+    category: e.category,
+    amount: String(e.amount),
+    status: e.status,
+    notes: e.notes ?? "",
+    paymentMethod: e.paymentMethod ?? "full",
+    installmentsTotal: String(e.installmentsTotal ?? 4),
+    installmentsPaid: String(e.installmentsPaid ?? 0),
+  };
+}
+
+/** The expense fields, shared by the add form and the edit modal. */
+function ExpenseFields({
+  form,
+  setForm,
+}: {
+  form: FormState;
+  setForm: (f: FormState) => void;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <label className="sm:col-span-2 block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">Label</span>
+        <input
+          className={inputClass}
+          value={form.label}
+          onChange={(e) => setForm({ ...form, label: e.target.value })}
+          placeholder="Exam fee — FAR"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">Category</span>
+        <select
+          className={inputClass}
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value as ExpenseCategory })}
+        >
+          {EXPENSE_CATEGORIES.map((c) => (
+            <option key={c.key} value={c.key}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">Amount (USD)</span>
+        <input
+          className={inputClass}
+          value={form.amount}
+          onChange={(e) => setForm({ ...form, amount: e.target.value })}
+          inputMode="decimal"
+          placeholder="350"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">Payment method</span>
+        <select
+          className={inputClass}
+          value={form.paymentMethod}
+          onChange={(e) => setForm({ ...form, paymentMethod: e.target.value as PaymentMethod })}
+        >
+          <option value="full">Pay in full</option>
+          <option value="installment">Installments</option>
+        </select>
+      </label>
+
+      {form.paymentMethod === "full" ? (
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Status</span>
+          <select
+            className={inputClass}
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value as ExpenseStatus })}
+          >
+            <option value="planned">Planned</option>
+            <option value="paid">Paid</option>
+          </select>
+        </label>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Paid</span>
+            <input
+              className={inputClass}
+              value={form.installmentsPaid}
+              onChange={(e) => setForm({ ...form, installmentsPaid: e.target.value })}
+              inputMode="numeric"
+              placeholder="0"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-slate-700">of total</span>
+            <input
+              className={inputClass}
+              value={form.installmentsTotal}
+              onChange={(e) => setForm({ ...form, installmentsTotal: e.target.value })}
+              inputMode="numeric"
+              placeholder="4"
+            />
+          </label>
+        </div>
+      )}
+
+      <label className="sm:col-span-2 block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">
+          Notes <span className="text-slate-400">(optional)</span>
+        </span>
+        <input
+          className={inputClass}
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
+      </label>
+    </div>
+  );
+}
+
+/** Edit an existing expense in a centered modal (portaled to escape the blurred nav). */
+function EditExpenseModal({
+  expense,
+  onSave,
+  onClose,
+}: {
+  expense: Expense;
+  onSave: (id: string, patch: Omit<Expense, "id">) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<FormState>(() => expenseToForm(expense));
+  const [error, setError] = useState<string | null>(null);
+
+  function save() {
+    const { payload, error: err } = formToPayload(form);
+    if (err) return setError(err);
+    onSave(expense.id, payload as Omit<Expense, "id">);
+    onClose();
+  }
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-soft ring-1 ring-slate-200"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <h2 className="text-lg font-semibold text-slate-900">Edit expense</h2>
+        <div className="mt-4">
+          <ExpenseFields form={form} setForm={setForm} />
+        </div>
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
+          >
+            Save changes
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function CostsClient() {
   const {
     hydrated,
@@ -51,8 +256,8 @@ export default function CostsClient() {
   } = useAppData();
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
   const [confirmTemplate, setConfirmTemplate] = useState(false);
 
@@ -60,54 +265,13 @@ export default function CostsClient() {
 
   const summary = useMemo(() => summarize(expenses), [expenses]);
 
-  const inputClass =
-    "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
-
-  function resetForm() {
-    setForm(EMPTY_FORM);
-    setEditingId(null);
-    setError(null);
-  }
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = Number(form.amount);
-    if (!form.label.trim()) return setError("Please enter a label.");
-    if (!Number.isFinite(amount) || amount < 0)
-      return setError("Amount must be 0 or greater.");
-
-    const isInstallment = form.paymentMethod === "installment";
-    const total = Math.max(1, Math.floor(Number(form.installmentsTotal) || 1));
-    const paidCount = Math.min(total, Math.max(0, Math.floor(Number(form.installmentsPaid) || 0)));
-
-    const payload: Omit<Expense, "id"> = {
-      label: form.label.trim(),
-      category: form.category,
-      amount,
-      status: isInstallment ? (paidCount >= total ? "paid" : "planned") : form.status,
-      notes: form.notes.trim() || undefined,
-      paymentMethod: form.paymentMethod,
-      installmentsTotal: isInstallment ? total : undefined,
-      installmentsPaid: isInstallment ? paidCount : undefined,
-    };
-    if (editingId) updateExpense(editingId, payload);
-    else addExpense(payload);
-    resetForm();
-  }
-
-  function startEdit(e: Expense) {
-    setEditingId(e.id);
+    const { payload, error: err } = formToPayload(form);
+    if (err) return setError(err);
+    addExpense(payload as Omit<Expense, "id">);
+    setForm(EMPTY_FORM);
     setError(null);
-    setForm({
-      label: e.label,
-      category: e.category,
-      amount: String(e.amount),
-      status: e.status,
-      notes: e.notes ?? "",
-      paymentMethod: e.paymentMethod ?? "full",
-      installmentsTotal: String(e.installmentsTotal ?? 4),
-      installmentsPaid: String(e.installmentsPaid ?? 0),
-    });
   }
 
   function toggleStatus(e: Expense) {
@@ -202,125 +366,19 @@ export default function CostsClient() {
           <div className="mb-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
           <form onSubmit={handleSubmit} className="card">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-              {editingId ? "Edit expense" : "Add an expense"}
+              Add an expense
             </h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="sm:col-span-2 block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Label</span>
-                <input
-                  className={inputClass}
-                  value={form.label}
-                  onChange={(e) => setForm({ ...form, label: e.target.value })}
-                  placeholder="Exam fee — FAR"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Category</span>
-                <select
-                  className={inputClass}
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value as ExpenseCategory })
-                  }
-                >
-                  {EXPENSE_CATEGORIES.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Amount (USD)</span>
-                <input
-                  className={inputClass}
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  inputMode="decimal"
-                  placeholder="350"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Payment method</span>
-                <select
-                  className={inputClass}
-                  value={form.paymentMethod}
-                  onChange={(e) =>
-                    setForm({ ...form, paymentMethod: e.target.value as PaymentMethod })
-                  }
-                >
-                  <option value="full">Pay in full</option>
-                  <option value="installment">Installments</option>
-                </select>
-              </label>
-
-              {form.paymentMethod === "full" ? (
-                <label className="block text-sm">
-                  <span className="mb-1 block font-medium text-slate-700">Status</span>
-                  <select
-                    className={inputClass}
-                    value={form.status}
-                    onChange={(e) =>
-                      setForm({ ...form, status: e.target.value as ExpenseStatus })
-                    }
-                  >
-                    <option value="planned">Planned</option>
-                    <option value="paid">Paid</option>
-                  </select>
-                </label>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Paid</span>
-                    <input
-                      className={inputClass}
-                      value={form.installmentsPaid}
-                      onChange={(e) => setForm({ ...form, installmentsPaid: e.target.value })}
-                      inputMode="numeric"
-                      placeholder="0"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">of total</span>
-                    <input
-                      className={inputClass}
-                      value={form.installmentsTotal}
-                      onChange={(e) => setForm({ ...form, installmentsTotal: e.target.value })}
-                      inputMode="numeric"
-                      placeholder="4"
-                    />
-                  </label>
-                </div>
-              )}
-
-              <label className="sm:col-span-2 block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">
-                  Notes <span className="text-slate-400">(optional)</span>
-                </span>
-                <input
-                  className={inputClass}
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
-              </label>
+            <div className="mt-4">
+              <ExpenseFields form={form} setForm={setForm} />
             </div>
             {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4">
               <button
                 type="submit"
                 className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
               >
-                {editingId ? "Save changes" : "Add expense"}
+                Add expense
               </button>
-              {editingId && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-full px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-              )}
             </div>
           </form>
 
@@ -398,7 +456,7 @@ export default function CostsClient() {
                           </button>
                         )}
                         <button
-                          onClick={() => startEdit(e)}
+                          onClick={() => setEditingExpense(e)}
                           className="rounded-full px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
                         >
                           Edit
@@ -451,6 +509,15 @@ export default function CostsClient() {
             advice.
           </p>
         </>
+      )}
+
+      {editingExpense && (
+        <EditExpenseModal
+          key={editingExpense.id}
+          expense={editingExpense}
+          onSave={updateExpense}
+          onClose={() => setEditingExpense(null)}
+        />
       )}
 
       <ConfirmModal
