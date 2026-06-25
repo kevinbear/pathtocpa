@@ -225,13 +225,18 @@ export default function JourneyClient() {
               <span className="text-sm font-bold text-slate-900">{journey.overallPercent}%</span>
             </ProgressRing>
             <div>
-              <p className="font-semibold text-slate-900">Overall progress</p>
+              <p className="font-semibold text-slate-900">
+                Overall progress · {journey.overallPercent}%
+              </p>
               {journey.allComplete ? (
-                <p className="text-sm text-slate-600">{journey.nextStep}</p>
+                <p className="mt-1 text-sm text-slate-600">{journey.nextStep}</p>
               ) : (
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium text-brand-700">Next up:</span> {journey.nextStep}
-                </p>
+                <div className="mt-2 inline-flex flex-col gap-0.5 rounded-xl bg-brand-50 px-3 py-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-700">
+                    👉 Your next step
+                  </span>
+                  <span className="text-sm font-medium text-brand-900">{journey.nextStep}</span>
+                </div>
               )}
             </div>
           </div>
