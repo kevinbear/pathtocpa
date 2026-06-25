@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -97,7 +98,7 @@ export default function EligibilityClient() {
       </div>
 
       {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <LoadingSkeleton />
       ) : courses.length === 0 ? (
         <div className="card text-center">
           <p className="text-slate-600">

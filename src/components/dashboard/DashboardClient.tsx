@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo } from "react";
 import Link from "next/link";
@@ -70,7 +71,7 @@ export default function DashboardClient() {
       </header>
 
       {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <LoadingSkeleton />
       ) : !hasData ? (
         <WelcomeHero />
       ) : (

@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { createContext, useContext, useMemo, useState } from "react";
 import Link from "next/link";
@@ -390,7 +391,7 @@ export default function AllocateClient() {
         </div>
 
         {!hydrated ? (
-          <p className="text-sm text-slate-400">Loading…</p>
+          <LoadingSkeleton />
         ) : (
           <DndContext
             sensors={sensors}

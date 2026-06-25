@@ -154,3 +154,28 @@ body {
     color: #ffffff;
   }
 }
+
+/* Shimmer skeleton placeholder */
+@keyframes pathtocpa-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(var(--c-slate-100));
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--c-slate-300) / 0.45),
+    transparent
+  );
+  animation: pathtocpa-shimmer 1.6s infinite;
+}

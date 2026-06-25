@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo, useState } from "react";
 import { useAppData } from "@/lib/data/AppDataProvider";
@@ -137,7 +138,7 @@ export default function CostsClient() {
       </div>
 
       {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <LoadingSkeleton />
       ) : (
         <>
           {/* Summary */}

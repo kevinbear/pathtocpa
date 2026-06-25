@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import { CATEGORIES } from "@/lib/eligibility/categories";
 import {
@@ -19,7 +19,11 @@ function fieldClass(hasError: boolean) {
   return `${cell} ${hasError ? "border-red-400 bg-red-50" : "border-slate-200"}`;
 }
 
-export default function ImportPanel() {
+export default function ImportPanel({
+  onPreviewActive,
+}: {
+  onPreviewActive?: (active: boolean) => void;
+}) {
   const { addCourse } = useAppData();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +34,11 @@ export default function ImportPanel() {
   const [missingColumns, setMissingColumns] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<DraftCourse[] | null>(null);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+
+  // Tell the parent when a preview is on screen (so it can hide the add form).
+  useEffect(() => {
+    onPreviewActive?.(!!(drafts && drafts.length > 0));
+  }, [drafts, onPreviewActive]);
 
   const validations = useMemo(
     () => (drafts ? drafts.map(validateDraft) : []),

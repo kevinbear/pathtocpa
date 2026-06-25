@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo } from "react";
 import Link from "next/link";
@@ -120,7 +121,7 @@ export default function JourneyClient() {
       </div>
 
       {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <LoadingSkeleton />
       ) : (
         <>
           <div className="card mb-8 flex items-center gap-4">

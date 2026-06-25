@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useState } from "react";
 import { useAppData } from "@/lib/data/AppDataProvider";
@@ -45,6 +46,7 @@ export default function CourseworkClient() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const deleteTarget = courses.find((c) => c.id === deleteId);
   const allLocked = courses.length > 0 && courses.every((c) => c.locked);
@@ -102,10 +104,18 @@ export default function CourseworkClient() {
       </div>
 
       <div className="space-y-8">
-        {/* Import + add form, side by side */}
-        <div className="grid items-start gap-6 lg:grid-cols-2">
-          <ImportPanel />
+        {/* Import + add form, side by side. The form fades out while importing. */}
+        <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-2"}`}>
+          <ImportPanel onPreviewActive={setImporting} />
 
+          <div
+            aria-hidden={importing}
+            className={`transition-all duration-300 ease-out ${
+              importing
+                ? "max-h-0 -translate-y-2 overflow-hidden opacity-0"
+                : "max-h-[200rem] translate-y-0 opacity-100"
+            }`}
+          >
           <form onSubmit={handleSubmit} className="card">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
               {editingId ? "Edit course" : "Add a course"}
@@ -253,6 +263,7 @@ export default function CourseworkClient() {
               )}
             </div>
           </form>
+          </div>
         </div>
 
         {/* Courses table (full width) */}
@@ -277,7 +288,7 @@ export default function CourseworkClient() {
           </div>
 
           {!hydrated ? (
-            <p className="text-sm text-slate-400">Loading…</p>
+            <LoadingSkeleton />
           ) : courses.length === 0 ? (
             <div className="card text-center text-sm text-slate-500">
               No courses yet. Add your first one above to start tracking your

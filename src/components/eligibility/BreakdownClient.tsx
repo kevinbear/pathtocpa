@@ -1,4 +1,5 @@
 "use client";
+import { LoadingSkeleton } from "@/components/Skeleton";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -228,7 +229,7 @@ export default function BreakdownClient() {
       </div>
 
       {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <LoadingSkeleton />
       ) : (
         <>
           <div className="card mb-6 space-y-4">
