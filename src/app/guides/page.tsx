@@ -80,17 +80,27 @@ export default function GuidesPage() {
                     )}
 
                     <div className="mt-4 flex flex-wrap gap-3">
-                      {g.links.map((l) => (
-                        <a
-                          key={l.url}
-                          href={l.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
-                        >
-                          {l.label} ↗
-                        </a>
-                      ))}
+                      {g.links.map((l) =>
+                        l.url.startsWith("/") ? (
+                          <Link
+                            key={l.url}
+                            href={l.url}
+                            className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-semibold text-oncolor hover:bg-brand-700"
+                          >
+                            {l.label} →
+                          </Link>
+                        ) : (
+                          <a
+                            key={l.url}
+                            href={l.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+                          >
+                            {l.label} ↗
+                          </a>
+                        ),
+                      )}
                     </div>
                   </div>
                 </details>

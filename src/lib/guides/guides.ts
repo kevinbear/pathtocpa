@@ -25,6 +25,28 @@ export const STAGE_LABELS: Record<GuideStage, string> = {
  */
 export const GUIDES: Guide[] = [
   {
+    id: "track-coursework",
+    stage: "education",
+    emoji: "📊",
+    title: "Track & match your coursework",
+    summary:
+      "Start here: add your courses on the Coursework page and we'll tally your units against every California requirement — so you know your gaps before you do anything else.",
+    steps: [
+      "Open the Coursework page and add each course — or import them all from an Excel/CSV file.",
+      "We total your units by category — accounting, business-related, accounting study, and ethics study.",
+      "Check the Eligibility page to see what's met and what's still missing, both to SIT and to LICENSE.",
+      "Use the Allocate board to fine-tune which course counts toward which requirement.",
+    ],
+    links: [
+      { label: "Open the Coursework page", url: "/coursework" },
+      { label: "Check your eligibility", url: "/eligibility" },
+    ],
+    tips: [
+      "Knowing your gaps now tells you exactly which transcripts and extra units you'll need next.",
+      "Fastest fill: upload your transcript to an AI chatbot and have it complete our import template.",
+    ],
+  },
+  {
     id: "transcripts",
     stage: "education",
     emoji: "📄",
