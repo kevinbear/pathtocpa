@@ -1,7 +1,7 @@
 "use client";
 import { LoadingSkeleton } from "@/components/Skeleton";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import { computeJourney, type Stage, type StageKey } from "@/lib/journey/computeJourney";
@@ -17,6 +17,36 @@ const inputClass =
 /** Ensure a user-pasted link has a protocol so it opens as an absolute URL. */
 function withHttp(u: string): string {
   return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+}
+
+/** A small chevron used as the bullet for next-action lists. */
+function ActionChevron() {
+  return (
+    <svg
+      className="mt-0.5 h-4 w-4 shrink-0 text-brand-500"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 5l5 5-5 5" />
+    </svg>
+  );
+}
+
+/** An emoji badge that sits on the timeline connector line. */
+function TimelineDot({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="absolute -left-[3.05rem] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-base shadow-sm ring-4 ring-[rgb(var(--background))]"
+      aria-hidden="true"
+    >
+      {children}
+    </span>
+  );
 }
 
 export default function JourneyClient() {
@@ -170,7 +200,7 @@ export default function JourneyClient() {
           <ul className="mt-3 space-y-1 text-sm text-slate-600">
             {stage.nextActions.slice(0, 4).map((a) => (
               <li key={a} className="flex items-start gap-2">
-                <span className="mt-0.5 text-brand-500">▸</span>
+                <ActionChevron />
                 <span>{a}</span>
               </li>
             ))}
@@ -231,13 +261,17 @@ export default function JourneyClient() {
             <span className="shrink-0 text-sm font-semibold text-brand-700">Open guides →</span>
           </Link>
 
-          <div className="space-y-6">
-            <StageCard stage={byKey.qualify} label="Step 1" />
+          <ol className="relative ml-3 space-y-6 border-l-2 border-brand-300 pl-10">
+            <li className="relative">
+              <TimelineDot>🎓</TimelineDot>
+              <StageCard stage={byKey.qualify} label="Step 1" />
+            </li>
 
             {/* Steps 2 & 3 run concurrently. Exam sits beside its deadline windows. */}
-            <div>
-              <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
-                <span aria-hidden>⇄</span> Steps 2 &amp; 3 — these run in parallel
+            <li className="relative">
+              <TimelineDot>⇄</TimelineDot>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-600">
+                Steps 2 &amp; 3 — these run in parallel
               </p>
               <div className="grid items-start gap-6 lg:grid-cols-2">
                 <StageCard stage={byKey.exam} label="Step 2" />
@@ -246,11 +280,17 @@ export default function JourneyClient() {
               <div className="mt-6">
                 <StageCard stage={byKey.experience} label="Step 3 · runs alongside the exam" />
               </div>
-            </div>
+            </li>
 
-            <StageCard stage={byKey.licenseEd} label="Step 4" />
-            <StageCard stage={byKey.license} label="Step 5" />
-          </div>
+            <li className="relative">
+              <TimelineDot>📚</TimelineDot>
+              <StageCard stage={byKey.licenseEd} label="Step 4" />
+            </li>
+            <li className="relative">
+              <TimelineDot>✅</TimelineDot>
+              <StageCard stage={byKey.license} label="Step 5" />
+            </li>
+          </ol>
 
           <p className="mt-8 text-xs text-slate-400">
             Stage definitions follow the {californiaRuleSet.authority}. This is a planning aid, not

@@ -130,7 +130,7 @@ export default function StartClient() {
 
         {/* Result */}
         <div>
-          <div className="card border-brand-200 ring-2 ring-brand-100">
+          <div className="card ring-2 ring-brand-400">
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Our recommendation</p>
             <h2 className="mt-1 text-xl font-bold text-slate-900">{result.headline}</h2>
             {recommended && <p className="mt-1 font-medium text-brand-700">→ {recommended.title}</p>}
@@ -178,7 +178,7 @@ export default function StartClient() {
           return (
             <div
               key={p.key}
-              className={`card ${isRec ? "border-brand-300 ring-2 ring-brand-200" : ""}`}
+              className={`card ${isRec ? "ring-2 ring-brand-400" : ""}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-semibold text-slate-900">{p.title}</h3>
