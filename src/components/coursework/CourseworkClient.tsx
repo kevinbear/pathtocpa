@@ -1,7 +1,7 @@
 "use client";
 import { LoadingSkeleton } from "@/components/Skeleton";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import ImportPanel from "@/components/coursework/ImportPanel";
 import RequirementProgressWidget from "@/components/coursework/RequirementProgressWidget";
@@ -19,6 +19,57 @@ const SUBCATS: Record<string, { id: string; label: string }[]> = Object.fromEntr
 /** Shorten with a trailing "*" to signal there's more text than fits. */
 function truncStar(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max).trimEnd()}*` : s;
+}
+
+type SortKey =
+  | "code"
+  | "name"
+  | "units"
+  | "unitType"
+  | "category"
+  | "subject"
+  | "completed"
+  | "institution"
+  | "term";
+type SortState = { key: SortKey; dir: "asc" | "desc" } | null;
+
+/** A clickable column header that cycles asc → desc → unsorted. */
+function SortableTh({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  className = "",
+  align = "left",
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  onSort: (k: SortKey) => void;
+  className?: string;
+  align?: "left" | "center";
+}) {
+  const active = sort?.key === sortKey;
+  return (
+    <th className={`px-2 py-2 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`group inline-flex w-full items-center gap-1 ${
+          align === "center" ? "justify-center" : ""
+        } hover:text-slate-700`}
+      >
+        {label}
+        <span
+          className={`text-[10px] ${
+            active ? "text-brand-600" : "text-slate-300 group-hover:text-slate-400"
+          }`}
+        >
+          {active ? (sort!.dir === "asc" ? "▲" : "▼") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
 }
 
 type FormState = {
@@ -52,6 +103,48 @@ export default function CourseworkClient() {
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [sort, setSort] = useState<SortState>(null);
+
+  function toggleSort(key: SortKey) {
+    setSort((s) =>
+      !s || s.key !== key ? { key, dir: "asc" } : s.dir === "asc" ? { key, dir: "desc" } : null,
+    );
+  }
+
+  const sortedCourses = useMemo(() => {
+    if (!sort) return courses;
+    const { key, dir } = sort;
+    const f = dir === "asc" ? 1 : -1;
+    const val = (c: Course): string | number => {
+      switch (key) {
+        case "units":
+          return c.units;
+        case "completed":
+          return c.completed ? 1 : 0;
+        case "name":
+          return c.name.toLowerCase();
+        case "code":
+          return (c.code ?? "").toLowerCase();
+        case "unitType":
+          return c.unitType;
+        case "category":
+          return c.category;
+        case "subject":
+          return (c.subject ?? "").toLowerCase();
+        case "institution":
+          return (c.institution ?? "").toLowerCase();
+        case "term":
+          return (c.term ?? "").toLowerCase();
+      }
+    };
+    return [...courses].sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      if (va < vb) return -f;
+      if (va > vb) return f;
+      return 0;
+    });
+  }, [courses, sort]);
 
   const deleteTarget = courses.find((c) => c.id === deleteId);
   const allLocked = courses.length > 0 && courses.every((c) => c.locked);
@@ -96,7 +189,9 @@ export default function CourseworkClient() {
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
+    <main className="mx-auto max-w-[104rem] px-6 py-12">
+      <div className="space-y-8">
+      <div className="mx-auto max-w-7xl">
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Coursework</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -108,7 +203,6 @@ export default function CourseworkClient() {
         </p>
       </div>
 
-      <div className="space-y-8">
         {/* Import + add form, side by side. The form fades out while importing. */}
         <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[27rem_minmax(0,1fr)]"}`}>
           <ImportPanel onPreviewActive={setImporting} />
@@ -270,6 +364,7 @@ export default function CourseworkClient() {
           </form>
           </div>
         </div>
+        </div>
 
         {/* Courses table (full width) */}
         <div>
@@ -301,23 +396,23 @@ export default function CourseworkClient() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-100">
-              <table className="w-full min-w-[94rem] border-collapse text-sm">
+              <table className="w-full min-w-[100rem] border-collapse text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="w-32 px-3 py-2 text-left">Code</th>
-                    <th className="min-w-[20rem] px-3 py-2 text-left">Course</th>
-                    <th className="w-20 px-2 py-2">Units</th>
-                    <th className="w-28 px-2 py-2">Type</th>
-                    <th className="w-40 px-2 py-2">Category</th>
-                    <th className="w-44 px-2 py-2">Sub-category</th>
-                    <th className="w-14 px-2 py-2">Done</th>
-                    <th className="w-44 px-2 py-2 text-left">School</th>
-                    <th className="w-36 px-2 py-2 text-left">Term</th>
+                    <SortableTh label="Code" sortKey="code" sort={sort} onSort={toggleSort} className="w-32" />
+                    <SortableTh label="Course" sortKey="name" sort={sort} onSort={toggleSort} className="min-w-[26rem]" />
+                    <SortableTh label="Units" sortKey="units" sort={sort} onSort={toggleSort} className="w-20" align="center" />
+                    <SortableTh label="Type" sortKey="unitType" sort={sort} onSort={toggleSort} className="w-28" align="center" />
+                    <SortableTh label="Category" sortKey="category" sort={sort} onSort={toggleSort} className="w-40" align="center" />
+                    <SortableTh label="Sub-category" sortKey="subject" sort={sort} onSort={toggleSort} className="w-44" align="center" />
+                    <SortableTh label="Done" sortKey="completed" sort={sort} onSort={toggleSort} className="w-14" align="center" />
+                    <SortableTh label="School" sortKey="institution" sort={sort} onSort={toggleSort} className="w-44" />
+                    <SortableTh label="Term" sortKey="term" sort={sort} onSort={toggleSort} className="w-36" />
                     <th className="w-20 px-2 py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map((c) => {
+                  {sortedCourses.map((c) => {
                     const locked = !!c.locked;
                     const cls = `w-full rounded-lg border px-2 py-1 text-sm focus:outline-none ${
                       locked
@@ -348,7 +443,7 @@ export default function CourseworkClient() {
                               title={c.name}
                               className="block w-full overflow-hidden whitespace-nowrap px-2 py-1 text-sm text-slate-600"
                             >
-                              {truncStar(c.name, 40)}
+                              {truncStar(c.name, 60)}
                             </span>
                           ) : (
                             <input
