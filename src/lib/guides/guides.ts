@@ -33,7 +33,8 @@ export const GUIDES: Guide[] = [
       "The CBA needs OFFICIAL transcripts from EVERY school where you earned units — community college AND university, not just the one that granted your degree — sent directly from the school.",
     steps: [
       "List every institution where you earned units that count — community colleges, transfer schools, your degree-granting university, and any study-abroad/foreign school.",
-      "For each U.S. school, order an official transcript from its registrar (often via the National Student Clearinghouse) and have it sent DIRECTLY to the CBA — one you carry yourself usually isn't accepted.",
+      "For each U.S. school, have its registrar send an official transcript DIRECTLY to the CBA — electronically to CBAtranscripts@cba.ca.gov through an approved vendor, or by sealed-envelope mail if your school uses a different provider. One you carry yourself is treated as unofficial.",
+      "Approved electronic vendors: Parchment, National Student Clearinghouse, eScrip-Safe, Credential Solutions, Certree, and The University of Texas at Austin. Your school chooses which one it uses.",
       "Studied abroad? Foreign transcripts can't go straight to the CBA — first have them evaluated by a CBA-approved foreign credentials evaluation service, which then sends the evaluation to the CBA.",
       "Keep every order and evaluation confirmation until the CBA confirms it has received them all.",
     ],
