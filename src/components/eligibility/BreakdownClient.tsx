@@ -185,7 +185,7 @@ export default function BreakdownClient() {
   );
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-12">
       <div className="mb-6">
         <Link href="/eligibility" className="text-sm font-medium text-brand-700 hover:underline">
           ← Back to eligibility

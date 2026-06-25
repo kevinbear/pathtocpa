@@ -119,7 +119,7 @@ export default function CostsClient() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-12">
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Costs</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">

@@ -49,7 +49,7 @@ export default function DashboardClient() {
   const currentIndex = journey.stages.findIndex((s) => s.key === journey.currentStageKey);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-12">
       <header className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">California · Dashboard</span>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
