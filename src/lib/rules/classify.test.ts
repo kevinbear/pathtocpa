@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyCourse } from "./classify";
+import { classifyCourse, looksMismatched } from "./classify";
 
 describe("classifyCourse", () => {
   it("recognizes accounting subjects", () => {
@@ -23,5 +23,23 @@ describe("classifyCourse", () => {
 
   it("returns null for unrecognizable names", () => {
     expect(classifyCourse("Yoga").category).toBeNull();
+  });
+});
+
+describe("looksMismatched — respects CBA cross-listing", () => {
+  it("does NOT flag Auditing in Ethics (it counts toward both)", () => {
+    expect(looksMismatched("Auditing", "ethics").mismatch).toBe(false);
+  });
+  it("does NOT flag Business Law in Ethics", () => {
+    expect(looksMismatched("Business Law", "ethics").mismatch).toBe(false);
+  });
+  it("does NOT flag an accounting course in Business (additional accounting)", () => {
+    expect(looksMismatched("Advanced Accounting", "business").mismatch).toBe(false);
+  });
+  it("DOES flag a business course in Accounting", () => {
+    expect(looksMismatched("Principles of Marketing", "accounting").mismatch).toBe(true);
+  });
+  it("DOES flag a philosophy course in Business", () => {
+    expect(looksMismatched("Introduction to Philosophy", "business").mismatch).toBe(true);
   });
 });

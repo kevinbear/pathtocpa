@@ -59,3 +59,27 @@ export const ALLOC_CATEGORY_LABEL: Record<AllocCategory, string> = {
   business: "Business-related",
   ethics: "Ethics",
 };
+
+/**
+ * Which course types each requirement legitimately accepts (the CBA categories
+ * overlap a lot):
+ *  - Accounting Subjects: accounting only.
+ *  - Business-Related: business AND accounting ("Additional Accounting Subjects").
+ *  - Ethics Study: accounting (Auditing/Fraud), business (Business Law, Corporate
+ *    Governance, …), and ethics — so it accepts essentially anything related.
+ */
+const ACCEPTS: Record<AllocCategory, AllocCategory[]> = {
+  accounting: ["accounting"],
+  business: ["business", "accounting"],
+  ethics: ["accounting", "business", "ethics"],
+};
+
+/** Soft check: does a course's guessed type clash with where it's placed? */
+export function looksMismatched(
+  name: string,
+  expected: AllocCategory,
+): { mismatch: boolean; guess: AllocCategory | null } {
+  const guess = classifyCourse(name).category;
+  if (!guess) return { mismatch: false, guess: null };
+  return { mismatch: !ACCEPTS[expected].includes(guess), guess };
+}

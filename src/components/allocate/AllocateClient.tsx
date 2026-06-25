@@ -22,7 +22,12 @@ import {
   type SubZone,
 } from "@/lib/rules/allocationTaxonomy";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
-import { classifyCourse, ALLOC_CATEGORY_LABEL, type AllocCategory } from "@/lib/rules/classify";
+import {
+  classifyCourse,
+  looksMismatched,
+  ALLOC_CATEGORY_LABEL,
+  type AllocCategory,
+} from "@/lib/rules/classify";
 import type { Course, CourseCategory } from "@/lib/eligibility/types";
 
 const POOL_ID = "pool";
@@ -39,9 +44,9 @@ function allocCat(cat: CourseCategory): AllocCategory | undefined {
 }
 function mismatchWarning(course: Course, expected?: AllocCategory): string | undefined {
   if (!expected) return undefined;
-  const guess = classifyCourse(course.name).category;
-  if (guess && guess !== expected) {
-    return `Looks like a ${ALLOC_CATEGORY_LABEL[guess]} course, not ${ALLOC_CATEGORY_LABEL[expected]}.`;
+  const { mismatch, guess } = looksMismatched(course.name, expected);
+  if (mismatch && guess) {
+    return `Looks like a ${ALLOC_CATEGORY_LABEL[guess]} course — it doesn't usually count toward ${ALLOC_CATEGORY_LABEL[expected]}.`;
   }
   return undefined;
 }
@@ -287,10 +292,7 @@ export default function AllocateClient() {
     }
     const expected = allocCat(t.category);
     const bad = expected
-      ? moved.filter((c) => {
-          const g = classifyCourse(c.name).category;
-          return g && g !== expected;
-        })
+      ? moved.filter((c) => looksMismatched(c.name, expected).mismatch)
       : [];
     if (bad.length === 0) setWarning(null);
     else if (moved.length === 1)
