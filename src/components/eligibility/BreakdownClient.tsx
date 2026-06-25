@@ -8,6 +8,7 @@ import { evaluate } from "@/lib/eligibility/evaluate";
 import californiaRuleSet from "@/lib/rules/california";
 import { CALIFORNIA_REFERENCE } from "@/lib/rules/californiaReference";
 import { CATEGORIES } from "@/lib/eligibility/categories";
+import { classifyCourse, ALLOC_CATEGORY_LABEL } from "@/lib/rules/classify";
 import type { CategoryProgress, CourseCategory } from "@/lib/eligibility/types";
 import ProgressBar from "@/components/ProgressBar";
 import DegreeFields from "@/components/DegreeFields";
@@ -83,12 +84,27 @@ function RequirementDetail({ progress }: { progress: CategoryProgress }) {
             Counted from your courses
           </p>
           <ul className="mt-2 space-y-1.5 text-sm">
-            {contributors.map((c, i) => (
+            {contributors.map((c, i) => {
+              const expected =
+                progress.key === "accounting" || progress.key === "business" || progress.key === "ethics"
+                  ? progress.key
+                  : null;
+              const guess = expected && c.courseId ? classifyCourse(c.name).category : null;
+              const mismatch = !!(guess && guess !== expected);
+              return (
               <li
                 key={c.courseId ?? `${c.name}-${i}`}
                 className="flex items-center justify-between gap-3"
               >
                 <span className="min-w-0 truncate text-slate-700">
+                  {mismatch && (
+                    <span
+                      className="mr-1 text-amber-500"
+                      title={`Looks like a ${ALLOC_CATEGORY_LABEL[guess]} course, not ${progress.label}`}
+                    >
+                      ⚠
+                    </span>
+                  )}
                   {c.name}
                   {c.note && <span className="ml-1 text-xs text-slate-400">({c.note})</span>}
                 </span>
@@ -114,7 +130,8 @@ function RequirementDetail({ progress }: { progress: CategoryProgress }) {
                   )}
                 </span>
               </li>
-            ))}
+              );
+            })}
           </ul>
           {contributors.some((c) => c.courseId) && (
             <p className="mt-2 text-xs text-slate-400">
