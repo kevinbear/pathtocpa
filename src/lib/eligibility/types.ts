@@ -25,6 +25,10 @@ export interface Contributor {
   name: string;
   units: number;
   note?: string;
+  /** Present when this entry is a real course (movable). Absent for synthetic rows. */
+  courseId?: string;
+  /** The course's current category (for the "move" control). */
+  category?: CourseCategory;
 }
 
 /** Progress toward a single requirement, all in semester units. */

@@ -46,6 +46,8 @@ function tally(courses: Course[], countPlanned: boolean) {
       name: course.name,
       units: round2(semUnits),
       note: course.completed ? undefined : "planned",
+      courseId: course.id,
+      category: course.category,
     });
     total += semUnits;
   }

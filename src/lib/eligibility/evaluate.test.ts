@@ -153,6 +153,18 @@ describe("evaluate — accounting → business overflow", () => {
   });
 });
 
+describe("evaluate — contributors", () => {
+  it("lists real courses with their id and category for the breakdown", () => {
+    const c = course("accounting", 3);
+    const r = evaluate({ courses: [c], hasBachelorsDegree: true }, CA);
+    const accounting = r.license.categories.find((x) => x.key === "accounting")!;
+    const contributor = accounting.contributors?.find((x) => x.courseId === c.id);
+    expect(contributor).toBeDefined();
+    expect(contributor?.category).toBe("accounting");
+    expect(contributor?.units).toBe(3);
+  });
+});
+
 describe("evaluate — accounting study waiver", () => {
   it("waives the accounting study requirement for a qualifying master's", () => {
     const r = evaluate(

@@ -7,21 +7,38 @@ import { profileHasBachelors, profileWaivesAccountingStudy } from "@/lib/data/ty
 import { evaluate } from "@/lib/eligibility/evaluate";
 import californiaRuleSet from "@/lib/rules/california";
 import { CALIFORNIA_REFERENCE } from "@/lib/rules/californiaReference";
-import type { CategoryProgress } from "@/lib/eligibility/types";
+import { CATEGORIES } from "@/lib/eligibility/categories";
+import type { CategoryProgress, CourseCategory } from "@/lib/eligibility/types";
 import ProgressBar from "@/components/ProgressBar";
 import DegreeFields from "@/components/DegreeFields";
 
+/** Proper, human-readable names for each requirement section. */
+const SECTION_TITLES: Record<CategoryProgress["key"], string> = {
+  accounting: "Accounting Subjects",
+  business: "Business-Related Subjects",
+  accountingStudy: "Accounting Study",
+  ethics: "Ethics Study",
+  other: "Other",
+  total: "Total Semester Units",
+};
+
 function RequirementDetail({ progress }: { progress: CategoryProgress }) {
+  const { updateCourse } = useAppData();
   const [open, setOpen] = useState(false);
   const reference = CALIFORNIA_REFERENCE.find((r) => r.key === progress.key);
+  const title = SECTION_TITLES[progress.key] ?? progress.label;
+
+  // Real courses (movable) first, sorted by units; synthetic rows (overflow, subtotals) after.
+  const contributors = [...(progress.contributors ?? [])].sort((a, b) => {
+    if (!!a.courseId !== !!b.courseId) return a.courseId ? -1 : 1;
+    return b.units - a.units;
+  });
 
   return (
     <div className="card">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold capitalize text-slate-900">
-            {progress.label} units
-          </h2>
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
           <p className="text-sm text-slate-500">
             {progress.waived ? (
               <span className="text-brand-700">Waived ✓</span>
@@ -59,23 +76,52 @@ function RequirementDetail({ progress }: { progress: CategoryProgress }) {
         <p className="mt-1 text-xs text-slate-500">{progress.overflowNote}</p>
       )}
 
-      {/* Your contributing courses */}
-      {progress.contributors && progress.contributors.length > 0 && (
+      {/* Your contributing courses (with a "move to another requirement" control) */}
+      {contributors.length > 0 && (
         <div className="mt-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Counted from your courses
           </p>
-          <ul className="mt-2 space-y-1 text-sm">
-            {progress.contributors.map((c, i) => (
-              <li key={`${c.name}-${i}`} className="flex justify-between gap-3">
-                <span className="text-slate-700">
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {contributors.map((c, i) => (
+              <li
+                key={c.courseId ?? `${c.name}-${i}`}
+                className="flex items-center justify-between gap-3"
+              >
+                <span className="min-w-0 truncate text-slate-700">
                   {c.name}
                   {c.note && <span className="ml-1 text-xs text-slate-400">({c.note})</span>}
                 </span>
-                <span className="font-medium text-slate-600">{c.units}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="font-medium text-slate-600">{c.units}</span>
+                  {c.courseId && c.category && (
+                    <select
+                      aria-label={`Move ${c.name} to another requirement`}
+                      className="rounded-lg border border-slate-200 px-2 py-0.5 text-xs focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                      value={c.category}
+                      onChange={(e) =>
+                        updateCourse(c.courseId as string, {
+                          category: e.target.value as CourseCategory,
+                        })
+                      }
+                    >
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat.key} value={cat.key}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
+          {contributors.some((c) => c.courseId) && (
+            <p className="mt-2 text-xs text-slate-400">
+              Tip: use a course&apos;s dropdown to move it to another requirement (e.g. count
+              Auditing toward Ethics Study instead of Accounting).
+            </p>
+          )}
         </div>
       )}
 
@@ -132,8 +178,11 @@ export default function BreakdownClient() {
     [courses, profile, countPlanned],
   );
 
-  // The license verdict covers all five requirements (incl. total).
-  const requirements = result.license.categories;
+  // The license verdict covers all five requirements; show "total" last.
+  const order = ["accounting", "business", "accountingStudy", "ethics", "total"];
+  const requirements = [...result.license.categories].sort(
+    (a, b) => order.indexOf(a.key) - order.indexOf(b.key),
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
