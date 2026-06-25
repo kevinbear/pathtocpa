@@ -68,7 +68,16 @@ export default function AboutPage() {
       </div>
 
       <p className="mt-10 text-sm text-slate-500">
-        Open source under the MIT license. See the{" "}
+        Open source under the MIT license —{" "}
+        <a
+          href="https://github.com/kevinbear/pathtocpa"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium text-brand-700 underline"
+        >
+          view the source on GitHub ↗
+        </a>
+        . Or head to the{" "}
         <Link href="/" className="font-medium text-brand-700 underline">
           home page
         </Link>{" "}
