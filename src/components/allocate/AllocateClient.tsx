@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -17,6 +17,7 @@ import { useAppData } from "@/lib/data/AppDataProvider";
 import {
   ALLOCATION_TAXONOMY,
   SUBZONE_TO_CATEGORY,
+  SUBZONE_BY_ID,
   type SubZone,
 } from "@/lib/rules/allocationTaxonomy";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
@@ -24,6 +25,7 @@ import { classifyCourse, ALLOC_CATEGORY_LABEL, type AllocCategory } from "@/lib/
 import type { Course, CourseCategory } from "@/lib/eligibility/types";
 
 const POOL_ID = "pool";
+const SECTION_SHORT: Record<string, string> = { accounting: "Acct", business: "Bus", ethics: "Eth" };
 
 function semUnits(c: Course): number {
   return toSemesterUnits(c.units, c.unitType);
@@ -31,13 +33,9 @@ function semUnits(c: Course): number {
 function sum(list: Course[]): number {
   return round2(list.reduce((t, c) => t + semUnits(c), 0));
 }
-
-/** Only accounting/business/ethics have a clear "type" we validate against. */
 function allocCat(cat: CourseCategory): AllocCategory | undefined {
   return cat === "accounting" || cat === "business" || cat === "ethics" ? cat : undefined;
 }
-
-/** A soft "looks like X, not Y" warning if a course's guessed type ≠ the zone's. */
 function mismatchWarning(course: Course, expected?: AllocCategory): string | undefined {
   if (!expected) return undefined;
   const guess = classifyCourse(course.name).category;
@@ -47,28 +45,61 @@ function mismatchWarning(course: Course, expected?: AllocCategory): string | und
   return undefined;
 }
 
-function CourseChip({
-  course,
-  overlay = false,
-  warn,
-}: {
-  course: Course;
-  overlay?: boolean;
-  warn?: string;
-}) {
+/** Resolve a drop-zone id into a category/subject assignment. */
+function targetFor(zone: string): { category: CourseCategory; subject?: string } | null {
+  if (zone === POOL_ID) return { category: "other", subject: undefined };
+  if (ALLOCATION_TAXONOMY.some((s) => s.key === zone)) return { category: zone as CourseCategory, subject: undefined };
+  if (SUBZONE_TO_CATEGORY[zone]) return { category: SUBZONE_TO_CATEGORY[zone], subject: zone };
+  return null;
+}
+
+interface BoardState {
+  showNumber: boolean;
+  showSection: boolean;
+  showSchool: boolean;
+  numberOf: (id: string) => number;
+  selected: Set<string>;
+  toggleSelect: (id: string) => void;
+}
+const BoardCtx = createContext<BoardState | null>(null);
+
+function CourseChip({ course, overlay = false, warn }: { course: Course; overlay?: boolean; warn?: string }) {
+  const ctx = useContext(BoardCtx);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: course.id });
+  const selected = ctx?.selected.has(course.id) ?? false;
+  const guess = classifyCourse(course.name).category;
+
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
       {...(overlay ? {} : listeners)}
       {...(overlay ? {} : attributes)}
+      onClick={() => !overlay && ctx?.toggleSelect(course.id)}
       title={warn ?? course.name}
       className={`flex cursor-grab items-center gap-1.5 rounded-lg bg-white px-2 py-1 text-xs shadow-sm ring-1 active:cursor-grabbing ${
-        warn ? "ring-amber-300" : "ring-slate-200"
+        selected
+          ? "bg-brand-50 ring-2 ring-brand-500"
+          : warn
+            ? "ring-amber-300"
+            : "ring-slate-200"
       } ${isDragging && !overlay ? "opacity-30" : ""} ${overlay ? "shadow-soft ring-brand-300" : ""}`}
     >
-      {warn && <span className="text-amber-500">⚠</span>}
+      {selected && <span className="text-brand-600">✓</span>}
+      {warn && !selected && <span className="text-amber-500">⚠</span>}
+      {ctx?.showNumber && (
+        <span className="rounded bg-slate-100 px-1 text-[10px] font-medium text-slate-500">
+          #{ctx.numberOf(course.id)}
+        </span>
+      )}
       <span className="max-w-[11rem] truncate text-slate-800">{course.name}</span>
+      {ctx?.showSchool && course.institution && (
+        <span className="max-w-[6rem] truncate text-[10px] text-slate-400">{course.institution}</span>
+      )}
+      {ctx?.showSection && (
+        <span className="rounded bg-slate-100 px-1 text-[10px] text-slate-500">
+          {SECTION_SHORT[guess ?? ""] ?? "?"}
+        </span>
+      )}
       <span className="shrink-0 rounded bg-slate-100 px-1 font-medium text-slate-600">
         {round2(semUnits(course))}
       </span>
@@ -110,7 +141,6 @@ function DropZone({
   );
 }
 
-/** The unused pool, grouped into "likely type" subsections. One drop target. */
 function PoolZone({ groups, total }: { groups: Record<string, Course[]>; total: number }) {
   const { setNodeRef, isOver } = useDroppable({ id: POOL_ID });
   const order: [string, string][] = [
@@ -169,28 +199,101 @@ function CapBadge({ zone, units }: { zone: SubZone; units: number }) {
   return <span className="pill bg-slate-100 text-slate-500">{round2(units)}</span>;
 }
 
+function ToggleBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+        active ? "bg-brand-100 text-brand-800" : "text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function AllocateClient() {
   const { hydrated, courses, updateCourse } = useAppData();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showNumber, setShowNumber] = useState(false);
+  const [showSection, setShowSection] = useState(false);
+  const [showSchool, setShowSchool] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
   const activeCourse = courses.find((c) => c.id === activeId) ?? null;
 
-  // Pool = unallocated courses (category "other"), grouped by likely type.
+  const numberMap = useMemo(() => {
+    const m = new Map<string, number>();
+    courses.forEach((c, i) => m.set(c.id, i + 1));
+    return m;
+  }, [courses]);
+
   const pool = useMemo(() => courses.filter((c) => c.category === "other"), [courses]);
   const poolGroups = useMemo(() => {
     const groups: Record<string, Course[]> = { accounting: [], business: [], ethics: [], other: [] };
-    for (const c of pool) {
-      const cat = classifyCourse(c.name).category ?? "other";
-      groups[cat].push(c);
-    }
+    for (const c of pool) groups[classifyCourse(c.name).category ?? "other"].push(c);
     return groups;
   }, [pool]);
 
-  function handleStart(e: DragStartEvent) {
-    setActiveId(String(e.active.id));
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function applyMove(ids: string[], zone: string) {
+    const t = targetFor(zone);
+    if (!t) return;
+    const moved = ids.map((id) => courses.find((c) => c.id === id)).filter(Boolean) as Course[];
+
+    // Hard cap: if this sub-zone has a "no more than N" limit, block over-filling it.
+    const sz = SUBZONE_BY_ID[zone];
+    if (sz?.cap !== undefined) {
+      const resultIds = new Set([
+        ...courses.filter((c) => c.subject === zone).map((c) => c.id),
+        ...moved.map((c) => c.id),
+      ]);
+      const resultUnits = sum(courses.filter((c) => resultIds.has(c.id)));
+      if (resultUnits > sz.cap + 1e-6) {
+        const current = sum(courses.filter((c) => c.subject === zone));
+        setWarning(
+          `Can't place ${moved.length > 1 ? `${moved.length} courses` : `“${moved[0]?.name}”`} here — ` +
+            `“${sz.label}” allows no more than ${sz.cap} units (it already has ${current}). Reduce the amount or pick another sub-area.`,
+        );
+        return; // blocked — nothing moves
+      }
+    }
+
+    moved.forEach((c) => updateCourse(c.id, t));
+
+    if (zone === POOL_ID) {
+      setWarning(null);
+      return;
+    }
+    const expected = allocCat(t.category);
+    const bad = expected
+      ? moved.filter((c) => {
+          const g = classifyCourse(c.name).category;
+          return g && g !== expected;
+        })
+      : [];
+    if (bad.length === 0) setWarning(null);
+    else if (moved.length === 1)
+      setWarning(`“${bad[0].name}”: ${mismatchWarning(bad[0], expected)?.replace(/\.$/, "")} — placed anyway.`);
+    else setWarning(`Moved ${moved.length} courses — ${bad.length} look like a different type (see ⚠).`);
   }
 
   function handleEnd(e: DragEndEvent) {
@@ -198,134 +301,196 @@ export default function AllocateClient() {
     const over = e.over?.id;
     if (!over) return;
     const courseId = String(e.active.id);
-    const zone = String(over);
-    const course = courses.find((c) => c.id === courseId);
-
-    let targetCat: CourseCategory | null = null;
-    if (zone === POOL_ID) {
-      updateCourse(courseId, { category: "other", subject: undefined });
-      setWarning(null);
-      return;
-    } else if (ALLOCATION_TAXONOMY.some((s) => s.key === zone)) {
-      targetCat = zone as CourseCategory;
-      updateCourse(courseId, { category: targetCat, subject: undefined });
-    } else if (SUBZONE_TO_CATEGORY[zone]) {
-      targetCat = SUBZONE_TO_CATEGORY[zone];
-      updateCourse(courseId, { category: targetCat, subject: zone });
-    }
-
-    // Soft "type doesn't match" hint (placement still goes through).
-    const warn = course && targetCat ? mismatchWarning(course, allocCat(targetCat)) : undefined;
-    setWarning(
-      warn && course ? `“${course.name}”: ${warn.replace(/\.$/, "")} — placed anyway; drag it back if that's wrong.` : null,
-    );
+    const usingSelection = selected.has(courseId) && selected.size > 0;
+    const ids = usingSelection ? Array.from(new Set([...selected, courseId])) : [courseId];
+    applyMove(ids, String(over));
+    if (usingSelection) setSelected(new Set());
   }
 
+  const board: BoardState = {
+    showNumber,
+    showSection,
+    showSchool,
+    numberOf: (id) => numberMap.get(id) ?? 0,
+    selected,
+    toggleSelect,
+  };
+
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
-      <div className="mb-6">
-        <Link href="/eligibility/breakdown" className="text-sm font-medium text-brand-700 hover:underline">
-          ← Back to breakdown
-        </Link>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Allocate Courses</h1>
-        <p className="mt-2 max-w-3xl text-slate-600">
-          Drag each course into the requirement and sub-area it counts toward. Everything in the
-          <span className="font-medium"> Unused pool</span> counts only toward your 150-unit total
-          until you place it. Your eligibility updates live as you drag.
-        </p>
-      </div>
+    <BoardCtx.Provider value={board}>
+      <main className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-6">
+          <Link href="/eligibility/breakdown" className="text-sm font-medium text-brand-700 hover:underline">
+            ← Back to breakdown
+          </Link>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Allocate Courses</h1>
+          <p className="mt-2 max-w-3xl text-slate-600">
+            Drag each course into the requirement and sub-area it counts toward. Click courses to
+            select several, then drag any one to move them together. Everything in the
+            <span className="font-medium"> Unused pool</span> counts only toward your 150-unit total
+            until you place it.
+          </p>
+        </div>
 
-      {!hydrated ? (
-        <p className="text-sm text-slate-400">Loading…</p>
-      ) : (
-        <DndContext sensors={sensors} onDragStart={handleStart} onDragEnd={handleEnd}>
-          {warning && (
-            <div className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
-              <span>⚠ {warning}</span>
-              <button onClick={() => setWarning(null)} className="shrink-0 text-amber-500 hover:text-amber-700" aria-label="Dismiss">
-                ✕
-              </button>
+        {!hydrated ? (
+          <p className="text-sm text-slate-400">Loading…</p>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            onDragStart={(e: DragStartEvent) => setActiveId(String(e.active.id))}
+            onDragEnd={handleEnd}
+          >
+            {/* Toolbar: display toggles + selection actions */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-slate-500">Show on chips:</span>
+              <ToggleBtn active={showNumber} onClick={() => setShowNumber((v) => !v)}>
+                # Number
+              </ToggleBtn>
+              <ToggleBtn active={showSection} onClick={() => setShowSection((v) => !v)}>
+                Likely section
+              </ToggleBtn>
+              <ToggleBtn active={showSchool} onClick={() => setShowSchool((v) => !v)}>
+                School
+              </ToggleBtn>
+
+              <span className="mx-1 h-5 w-px bg-slate-200" />
+
+              {selected.size > 0 ? (
+                <>
+                  <span className="text-xs font-medium text-brand-700">{selected.size} selected</span>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      applyMove(Array.from(selected), e.target.value);
+                      setSelected(new Set());
+                    }}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  >
+                    <option value="">Move selected to…</option>
+                    <option value={POOL_ID}>Unused pool</option>
+                    {ALLOCATION_TAXONOMY.map((s) => (
+                      <optgroup key={s.key} label={s.title}>
+                        <option value={s.key}>{s.title} (unsorted)</option>
+                        {s.subzones.map((z) => (
+                          <option key={z.id} value={z.id}>
+                            — {z.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setSelected(new Set())}
+                    className="rounded-full px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100"
+                  >
+                    Clear
+                  </button>
+                </>
+              ) : (
+                <span className="text-xs text-slate-400">Tip: click courses to multi-select.</span>
+              )}
             </div>
-          )}
 
-          {/* Unused pool */}
-          <div className="card mb-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-                Unused pool
-              </h2>
-              <span className="text-xs text-slate-400">{pool.length} course(s) · {sum(pool)} units</span>
+            {warning && (
+              <div className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
+                <span>⚠ {warning}</span>
+                <button onClick={() => setWarning(null)} className="shrink-0 text-amber-500 hover:text-amber-700" aria-label="Dismiss">
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Unused pool */}
+            <div className="card mb-6">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
+                  Unused pool
+                </h2>
+                <span className="text-xs text-slate-400">
+                  {pool.length} course(s) · {sum(pool)} units
+                </span>
+              </div>
+              <PoolZone groups={poolGroups} total={pool.length} />
             </div>
-            <PoolZone groups={poolGroups} total={pool.length} />
-          </div>
 
-          {/* Requirement sections */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {ALLOCATION_TAXONOMY.map((section) => {
-              const inSection = courses.filter((c) => c.category === section.key);
-              const total = sum(inSection);
-              const met = total + 1e-6 >= section.requiredUnits;
-              const generalCourses = inSection.filter(
-                (c) => !c.subject || !section.subzones.some((z) => z.id === c.subject),
-              );
-              return (
-                <div key={section.key} className="card">
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
-                    <span className={`pill ${met ? "bg-brand-100 text-brand-800" : "bg-amber-100 text-amber-800"}`}>
-                      {total} / {section.requiredUnits}
-                      {met && " ✓"}
-                    </span>
-                  </div>
+            {/* Requirement sections */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {ALLOCATION_TAXONOMY.map((section) => {
+                const inSection = courses.filter((c) => c.category === section.key);
+                const total = sum(inSection);
+                const met = total + 1e-6 >= section.requiredUnits;
+                const generalCourses = inSection.filter(
+                  (c) => !c.subject || !section.subzones.some((z) => z.id === c.subject),
+                );
+                return (
+                  <div key={section.key} className="card">
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
+                      <span className={`pill ${met ? "bg-brand-100 text-brand-800" : "bg-amber-100 text-amber-800"}`}>
+                        {total} / {section.requiredUnits}
+                        {met && " ✓"}
+                      </span>
+                    </div>
 
-                  <div className="space-y-2">
-                    {section.subzones.map((zone) => {
-                      const zoneCourses = courses.filter((c) => c.subject === zone.id);
-                      return (
-                        <DropZone
-                          key={zone.id}
-                          id={zone.id}
-                          courses={zoneCourses}
-                          expectedCategory={allocCat(SUBZONE_TO_CATEGORY[zone.id])}
-                        >
-                          <div className="mb-1.5 flex items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-slate-700">{zone.label}</p>
-                              {zone.examples && (
-                                <p className="truncate text-[11px] text-slate-400">{zone.examples}</p>
-                              )}
+                    <div className="space-y-2">
+                      {section.subzones.map((zone) => {
+                        const zoneCourses = courses.filter((c) => c.subject === zone.id);
+                        return (
+                          <DropZone
+                            key={zone.id}
+                            id={zone.id}
+                            courses={zoneCourses}
+                            expectedCategory={allocCat(SUBZONE_TO_CATEGORY[zone.id])}
+                          >
+                            <div className="mb-1.5 flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-slate-700">{zone.label}</p>
+                                {zone.examples && (
+                                  <p className="truncate text-[11px] text-slate-400">{zone.examples}</p>
+                                )}
+                              </div>
+                              <CapBadge zone={zone} units={sum(zoneCourses)} />
                             </div>
-                            <CapBadge zone={zone} units={sum(zoneCourses)} />
-                          </div>
-                        </DropZone>
-                      );
-                    })}
+                          </DropZone>
+                        );
+                      })}
 
-                    {/* Courses in this section not yet sorted into a sub-area */}
-                    <DropZone
-                      id={section.key}
-                      courses={generalCourses}
-                      expectedCategory={allocCat(section.key)}
-                      className="bg-slate-50/40"
-                    >
-                      <p className="mb-1.5 text-xs font-medium text-slate-500">
-                        In {section.title} (unsorted)
-                      </p>
-                    </DropZone>
+                      <DropZone
+                        id={section.key}
+                        courses={generalCourses}
+                        expectedCategory={allocCat(section.key)}
+                        className="bg-slate-50/40"
+                      >
+                        <p className="mb-1.5 text-xs font-medium text-slate-500">
+                          In {section.title} (unsorted)
+                        </p>
+                      </DropZone>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <DragOverlay>{activeCourse ? <CourseChip course={activeCourse} overlay /> : null}</DragOverlay>
-        </DndContext>
-      )}
+            <DragOverlay>
+              {activeCourse ? (
+                selected.has(activeCourse.id) && selected.size > 1 ? (
+                  <div className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-oncolor shadow-soft">
+                    {selected.size} courses
+                  </div>
+                ) : (
+                  <CourseChip course={activeCourse} overlay />
+                )
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
 
-      <p className="mt-8 text-xs text-slate-400">
-        Sub-area caps (e.g. ≤14 business, ≤3 each) are shown for guidance; the eligibility verdict
-        currently counts by top-level requirement. This is a planning aid, not official advice.
-      </p>
-    </main>
+        <p className="mt-8 text-xs text-slate-400">
+          Sub-area caps (e.g. ≤14 business, ≤3 each) are shown for guidance; the eligibility verdict
+          currently counts by top-level requirement. This is a planning aid, not official advice.
+        </p>
+      </main>
+    </BoardCtx.Provider>
   );
 }

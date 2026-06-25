@@ -92,3 +92,8 @@ export const SUBZONE_TO_CATEGORY: Record<string, Exclude<CourseCategory, "other"
   Object.fromEntries(
     ALLOCATION_TAXONOMY.flatMap((s) => s.subzones.map((z) => [z.id, s.key])),
   );
+
+/** Look up a sub-zone's full definition (label, cap, min) by id. */
+export const SUBZONE_BY_ID: Record<string, SubZone> = Object.fromEntries(
+  ALLOCATION_TAXONOMY.flatMap((s) => s.subzones.map((z) => [z.id, z])),
+);
