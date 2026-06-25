@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GUIDES, STAGE_LABELS, CBA_CONTACT, type GuideStage } from "@/lib/guides/guides";
 
 export const metadata = { title: "Guides — PathToCPA" };
@@ -7,6 +8,11 @@ const STAGE_ORDER: GuideStage[] = ["education", "exam", "experience", "ethics"];
 export default function GuidesPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      <div className="mb-6">
+        <Link href="/journey" className="text-sm font-medium text-brand-700 hover:underline">
+          ← Back to Journey
+        </Link>
+      </div>
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Guides</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -36,7 +42,18 @@ export default function GuidesPage() {
                       <span className="block font-semibold text-slate-900">{g.title}</span>
                       <span className="block text-sm text-slate-500">{g.summary}</span>
                     </span>
-                    <span className="text-slate-400 transition-transform group-open:rotate-180">⌄</span>
+                    <svg
+                      className="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 8l5 5 5-5" />
+                    </svg>
                   </summary>
 
                   <div className="mt-4 border-t border-slate-100 pt-4">
