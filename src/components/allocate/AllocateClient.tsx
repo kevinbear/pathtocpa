@@ -14,6 +14,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useAppData } from "@/lib/data/AppDataProvider";
+import { profileWaivesAccountingStudy } from "@/lib/data/types";
 import {
   ALLOCATION_TAXONOMY,
   SUBZONE_TO_CATEGORY,
@@ -221,7 +222,8 @@ function ToggleBtn({
 }
 
 export default function AllocateClient() {
-  const { hydrated, courses, updateCourse } = useAppData();
+  const { hydrated, courses, profile, updateCourse } = useAppData();
+  const accountingStudyWaived = profileWaivesAccountingStudy(profile);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -419,7 +421,8 @@ export default function AllocateClient() {
               {ALLOCATION_TAXONOMY.map((section) => {
                 const inSection = courses.filter((c) => c.category === section.key);
                 const total = sum(inSection);
-                const met = total + 1e-6 >= section.requiredUnits;
+                const waived = section.key === "accountingStudy" && accountingStudyWaived;
+                const met = waived || total + 1e-6 >= section.requiredUnits;
                 const generalCourses = inSection.filter(
                   (c) => !c.subject || !section.subzones.some((z) => z.id === c.subject),
                 );
@@ -428,10 +431,23 @@ export default function AllocateClient() {
                     <div className="mb-3 flex items-start justify-between gap-2">
                       <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
                       <span className={`pill ${met ? "bg-brand-100 text-brand-800" : "bg-amber-100 text-amber-800"}`}>
-                        {total} / {section.requiredUnits}
-                        {met && " ✓"}
+                        {waived ? (
+                          "Waived ✓"
+                        ) : (
+                          <>
+                            {total} / {section.requiredUnits}
+                            {met && " ✓"}
+                          </>
+                        )}
                       </span>
                     </div>
+
+                    {waived && (
+                      <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+                        ✅ Met automatically by your master&apos;s degree in accounting, taxation, or
+                        laws in taxation — you don&apos;t need to allocate courses here.
+                      </p>
+                    )}
 
                     <div className="space-y-2">
                       {section.subzones.map((zone) => {
