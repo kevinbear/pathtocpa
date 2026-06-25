@@ -78,7 +78,9 @@ export default function Footer() {
         </div>
 
         <p className="mt-10 border-t border-slate-100 pt-6 text-xs text-slate-400">
-          PathToCPA · Always confirm requirements with the{" "}
+          <span className="font-medium text-slate-500">California only.</span> PathToCPA covers
+          California CPA requirements — it doesn&apos;t include other states&apos; rules, which
+          differ. Always confirm with the{" "}
           <a
             href="https://www.dca.ca.gov/cba/"
             target="_blank"

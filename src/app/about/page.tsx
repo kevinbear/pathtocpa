@@ -24,6 +24,12 @@ export default function AboutPage() {
         started.
       </p>
 
+      <div className="mt-5 max-w-2xl rounded-2xl bg-brand-50 p-4 text-sm text-brand-900 ring-1 ring-brand-100">
+        <strong>📍 California only.</strong> Every rule, unit count, and deadline here is for the{" "}
+        <strong>California</strong> CPA license. Other states have different requirements — if you
+        plan to license elsewhere, this tool won&apos;t match your state&apos;s rules.
+      </div>
+
       <h2 className="mt-12 text-xl font-semibold text-slate-900">
         California education requirements (summary)
       </h2>
