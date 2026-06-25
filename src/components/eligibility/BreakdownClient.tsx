@@ -4,7 +4,7 @@ import { LoadingSkeleton } from "@/components/Skeleton";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
-import { profileHasBachelors, profileWaivesAccountingStudy } from "@/lib/data/types";
+import { profileHasBachelors, profileWaivesAccountingStudy, profileTotalUnits } from "@/lib/data/types";
 import { evaluate } from "@/lib/eligibility/evaluate";
 import californiaRuleSet from "@/lib/rules/california";
 import { CALIFORNIA_REFERENCE } from "@/lib/rules/californiaReference";
@@ -76,6 +76,9 @@ function RequirementDetail({ progress }: { progress: CategoryProgress }) {
 
       {progress.overflowNote && (
         <p className="mt-1 text-xs text-slate-500">{progress.overflowNote}</p>
+      )}
+      {progress.selfReportedNote && (
+        <p className="mt-1 text-xs text-slate-500">{progress.selfReportedNote}</p>
       )}
 
       {/* Your contributing courses (with a "move to another requirement" control) */}
@@ -192,6 +195,8 @@ export default function BreakdownClient() {
           courses,
           hasBachelorsDegree: profileHasBachelors(profile),
           waivesAccountingStudy: profileWaivesAccountingStudy(profile),
+          totalUnitsSelfReported: profileTotalUnits(profile).value,
+          totalUnitsMeetsMinimum: profileTotalUnits(profile).meetsMinimum,
         },
         californiaRuleSet,
         { countPlanned },

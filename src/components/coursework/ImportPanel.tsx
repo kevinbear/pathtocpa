@@ -215,6 +215,17 @@ export default function ImportPanel({
         {busy && <span className="text-xs text-slate-500">Reading file…</span>}
       </div>
 
+      {/* AI shortcut tip — the fastest way to fill the template from a transcript. */}
+      <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5 text-xs text-brand-900">
+        <strong>💡 Fastest way:</strong> download a template above, then upload your
+        transcript (PDF or screenshot) to an AI chatbot like Claude or ChatGPT and ask:{" "}
+        <em>
+          &ldquo;Fill this template with my accounting, business, and ethics-related courses —
+          one row each with name, units, and category.&rdquo;
+        </em>{" "}
+        Save the file it gives you, then choose it above to import.
+      </div>
+
       {/* Success */}
       {importedCount !== null && (
         <p className="mt-4 rounded-xl bg-brand-50 p-3 text-sm text-brand-800">

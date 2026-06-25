@@ -18,6 +18,15 @@ export interface Profile {
   /** Optional ISO date the student is aiming to be licensed by. */
   targetLicenseDate?: string;
 
+  /**
+   * Self-reported total semester units completed so far. Drives the 150-unit total
+   * and is intentionally SEPARATE from the entered courses — transcribing every
+   * GE/elective is impractical, so we ask the student for the number directly.
+   */
+  unitsCompleted?: number;
+  /** Quick flag: student already has at least the required total (e.g. "150+"); exact count not needed. */
+  hasMinTotalUnits?: boolean;
+
   // --- Journey progress beyond education ---
   /** Which exam sections have been passed (subset of the 4 slots). */
   examSectionsPassed: ExamSection[];
@@ -64,4 +73,16 @@ export function profileWaivesAccountingStudy(p: Profile): boolean {
   return (
     p.degreeLevel === "masters" && !!p.mastersField && WAIVER_FIELDS.includes(p.mastersField)
   );
+}
+
+/**
+ * The student's self-reported total semester units for the 150-unit rule, independent
+ * of the entered courses. `meetsMinimum` is the "150+" quick option; `value` is an exact count.
+ */
+export function profileTotalUnits(p: Profile): { value?: number; meetsMinimum: boolean } {
+  if (p.hasMinTotalUnits) return { meetsMinimum: true };
+  if (typeof p.unitsCompleted === "number" && p.unitsCompleted >= 0) {
+    return { value: p.unitsCompleted, meetsMinimum: false };
+  }
+  return { meetsMinimum: false };
 }

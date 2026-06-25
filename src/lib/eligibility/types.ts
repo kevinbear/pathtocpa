@@ -54,6 +54,8 @@ export interface CategoryProgress {
   /** True if this requirement was satisfied by a degree waiver rather than units. */
   waived?: boolean;
   waivedNote?: string;
+  /** Note explaining a self-reported total (the 150-unit total, independent of the course list). */
+  selfReportedNote?: string;
   /** Courses (and synthetic entries) that counted toward this requirement. */
   contributors?: Contributor[];
 }
@@ -70,6 +72,13 @@ export interface EligibilityInput {
   hasBachelorsDegree: boolean;
   /** When true, the 20-unit Accounting Study requirement is waived (qualifying master's). */
   waivesAccountingStudy?: boolean;
+  /**
+   * Self-reported total semester units. Drives the total-units requirement independently
+   * of the entered courses. When omitted, the sum of entered courses is used as a fallback.
+   */
+  totalUnitsSelfReported?: number;
+  /** User indicated they already meet/exceed the required total (e.g. the "150+" option). */
+  totalUnitsMeetsMinimum?: boolean;
 }
 
 export interface EligibilityResult {

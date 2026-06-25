@@ -129,6 +129,61 @@ describe("evaluate — license eligibility", () => {
   });
 });
 
+describe("evaluate — self-reported total units", () => {
+  const subjectsOnly = () => [
+    course("accounting", 24),
+    course("business", 24),
+    course("accountingStudy", 20),
+    course("ethics", 10),
+  ]; // 78 units of subjects, but a real transcript has more.
+
+  function totalProgress(courses: Course[], extra: Record<string, unknown>) {
+    const r = evaluate({ courses, hasBachelorsDegree: true, ...extra }, CA);
+    return { r, total: r.license.categories.find((c) => c.key === "total")! };
+  }
+
+  it("falls back to the course sum when nothing is reported", () => {
+    const { r, total } = totalProgress(subjectsOnly(), {});
+    expect(total.completed).toBe(78);
+    expect(r.totalSemesterUnits).toBe(78);
+    expect(total.satisfied).toBe(false);
+  });
+
+  it("uses the self-reported number, independent of entered courses", () => {
+    const { r, total } = totalProgress(subjectsOnly(), { totalUnitsSelfReported: 130 });
+    expect(total.completed).toBe(130);
+    expect(r.totalSemesterUnits).toBe(130);
+    expect(total.satisfied).toBe(false);
+    expect(total.contributors).toEqual([]); // not broken down by category when self-reported
+  });
+
+  it("satisfies the total when the self-reported number reaches 150", () => {
+    const { total } = totalProgress(subjectsOnly(), { totalUnitsSelfReported: 150 });
+    expect(total.satisfied).toBe(true);
+    expect(total.percent).toBe(100);
+  });
+
+  it("satisfies the total via the '150+' minimum flag", () => {
+    const { r, total } = totalProgress(subjectsOnly(), { totalUnitsMeetsMinimum: true });
+    expect(total.satisfied).toBe(true);
+    expect(r.totalSemesterUnits).toBe(150);
+  });
+
+  it("still checks the subject requirements from the courses, not the total", () => {
+    // Plenty of total units, but missing ethics → still not license-eligible.
+    const r = evaluate(
+      {
+        courses: [course("accounting", 24), course("business", 24), course("accountingStudy", 20)],
+        hasBachelorsDegree: true,
+        totalUnitsMeetsMinimum: true,
+      },
+      CA,
+    );
+    expect(r.license.eligible).toBe(false);
+    expect(r.license.missing).toContain("10 more ethics study units needed (have 0 of 10).");
+  });
+});
+
 describe("evaluate — accounting → business overflow", () => {
   it("counts accounting units beyond 24 toward the business requirement", () => {
     // 48 accounting, 0 business → 24 overflow satisfies the 24 business requirement.

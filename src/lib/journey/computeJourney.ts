@@ -3,6 +3,7 @@ import type { EvaluateOptions, Course } from "../eligibility/types";
 import {
   profileHasBachelors,
   profileWaivesAccountingStudy,
+  profileTotalUnits,
   type Profile,
   type ExamSection,
 } from "../data/types";
@@ -79,6 +80,8 @@ export function computeJourney(
       courses: input.courses,
       hasBachelorsDegree: hasBachelors,
       waivesAccountingStudy: profileWaivesAccountingStudy(profile),
+      totalUnitsSelfReported: profileTotalUnits(profile).value,
+      totalUnitsMeetsMinimum: profileTotalUnits(profile).meetsMinimum,
     },
     ruleSet,
     options,

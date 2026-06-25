@@ -4,7 +4,7 @@ import { LoadingSkeleton } from "@/components/Skeleton";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
-import { profileHasBachelors, profileWaivesAccountingStudy } from "@/lib/data/types";
+import { profileHasBachelors, profileWaivesAccountingStudy, profileTotalUnits } from "@/lib/data/types";
 import { evaluate } from "@/lib/eligibility/evaluate";
 import californiaRuleSet from "@/lib/rules/california";
 import type { Verdict } from "@/lib/eligibility/types";
@@ -77,6 +77,8 @@ export default function EligibilityClient() {
           courses,
           hasBachelorsDegree: profileHasBachelors(profile),
           waivesAccountingStudy: profileWaivesAccountingStudy(profile),
+          totalUnitsSelfReported: profileTotalUnits(profile).value,
+          totalUnitsMeetsMinimum: profileTotalUnits(profile).meetsMinimum,
         },
         californiaRuleSet,
         { countPlanned },

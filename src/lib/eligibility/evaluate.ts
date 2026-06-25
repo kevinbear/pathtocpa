@@ -161,11 +161,29 @@ export function evaluate(
 
   // --- License eligibility ---
   const waived = input.waivesAccountingStudy === true;
+
+  // The 150-unit total is self-reported (separate from the entered courses, which only
+  // need to cover the accounting/business/ethics subjects). Fall back to the course sum
+  // when nothing is reported yet.
+  const reportedTotal = input.totalUnitsMeetsMinimum
+    ? ruleSet.license.totalUnits
+    : input.totalUnitsSelfReported;
+  const usingSelfReport = reportedTotal != null;
+  const effectiveTotal = usingSelfReport ? round2(reportedTotal as number) : total;
+  const totalNote = input.totalUnitsMeetsMinimum
+    ? "You indicated you already have the required total or more. ✓"
+    : usingSelfReport
+      ? "Self-reported — separate from the courses you enter (they only need to cover the subject requirements)."
+      : "This currently counts only the courses you've entered. Set your real total above so it isn't undercounted.";
+
   const licenseCategories: CategoryProgress[] = [
-    makeProgress("total", "total semester", ruleSet.license.totalUnits, total, {
-      contributors: (Object.keys(byCategory) as CourseCategory[])
-        .filter((k) => byCategory[k] > 0)
-        .map((k) => ({ name: CATEGORY_LABELS[k], units: byCategory[k] })),
+    makeProgress("total", "total semester", ruleSet.license.totalUnits, effectiveTotal, {
+      selfReportedNote: totalNote,
+      contributors: usingSelfReport
+        ? []
+        : (Object.keys(byCategory) as CourseCategory[])
+            .filter((k) => byCategory[k] > 0)
+            .map((k) => ({ name: CATEGORY_LABELS[k], units: byCategory[k] })),
     }),
     makeProgress("accounting", CATEGORY_LABELS.accounting, ruleSet.license.accounting, byCategory.accounting, accountingExtra()),
     makeProgress("business", CATEGORY_LABELS.business, ruleSet.license.business, effectiveBusiness, businessExtra()),
@@ -199,7 +217,7 @@ export function evaluate(
   };
 
   return {
-    totalSemesterUnits: total,
+    totalSemesterUnits: round2(effectiveTotal),
     unitsByCategory: byCategory,
     exam,
     license,
