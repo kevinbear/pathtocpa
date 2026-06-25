@@ -28,6 +28,12 @@ function course(category: Course["category"], units: number): Course {
   };
 }
 
+/** Just enough to SIT: a degree + 24 accounting + 24 business (no 150 / study units). */
+function sitCourses(): Course[] {
+  return [course("accounting", 24), course("business", 24)];
+}
+
+/** Full licensure education: 150 units incl. accounting study + ethics study. */
 function licensedCourses(): Course[] {
   return [
     course("accounting", 24),
@@ -38,25 +44,37 @@ function licensedCourses(): Course[] {
   ];
 }
 
-describe("computeJourney", () => {
-  it("starts everyone at the education stage with 0% overall", () => {
+describe("computeJourney — 5-step model", () => {
+  it("starts everyone at 'qualify to sit' with 0% and five steps", () => {
     const j = computeJourney({ courses: [], profile: profile() }, CA);
-    expect(j.currentStageKey).toBe("education");
+    expect(j.currentStageKey).toBe("qualify");
     expect(j.overallPercent).toBe(0);
     expect(j.allComplete).toBe(false);
-    expect(j.stages).toHaveLength(4);
+    expect(j.stages).toHaveLength(5);
+    expect(j.stages.map((s) => s.key)).toEqual([
+      "qualify",
+      "exam",
+      "experience",
+      "licenseEd",
+      "license",
+    ]);
   });
 
-  it("marks education done once licensure education is met", () => {
+  it("separates sitting from licensure: 24/24 + degree qualifies to sit but NOT licensure education", () => {
     const j = computeJourney(
-      { courses: licensedCourses(), profile: profile({ degreeLevel: "bachelors" }) },
+      { courses: sitCourses(), profile: profile({ degreeLevel: "bachelors" }) },
       CA,
     );
-    const edu = j.stages.find((s) => s.key === "education")!;
-    expect(edu.status).toBe("done");
-    expect(edu.percent).toBe(100);
-    // With education done, the current stage advances to the exam.
-    expect(j.currentStageKey).toBe("exam");
+    const qualify = j.stages.find((s) => s.key === "qualify")!;
+    const licenseEd = j.stages.find((s) => s.key === "licenseEd")!;
+    expect(qualify.status).toBe("done"); // can sit for the exam
+    expect(licenseEd.status).not.toBe("done"); // but not done with licensure education (no 150 / study)
+  });
+
+  it("marks exam and experience as parallel steps", () => {
+    const j = computeJourney({ courses: [], profile: profile() }, CA);
+    expect(j.stages.find((s) => s.key === "exam")!.parallel).toBe(true);
+    expect(j.stages.find((s) => s.key === "experience")!.parallel).toBe(true);
   });
 
   it("tracks exam progress as a fraction of the four sections", () => {
@@ -64,22 +82,25 @@ describe("computeJourney", () => {
       { courses: [], profile: profile({ examSectionsPassed: ["AUD", "FAR"] }) },
       CA,
     );
-    const exam = j.stages.find((s) => s.key === "exam")!;
-    expect(exam.percent).toBe(50);
-    expect(exam.status).toBe("in_progress");
+    expect(j.stages.find((s) => s.key === "exam")!.percent).toBe(50);
   });
 
   it("caps experience at 12 months", () => {
-    const j = computeJourney(
-      { courses: [], profile: profile({ experienceMonths: 18 }) },
-      CA,
-    );
+    const j = computeJourney({ courses: [], profile: profile({ experienceMonths: 18 }) }, CA);
     const exp = j.stages.find((s) => s.key === "experience")!;
     expect(exp.percent).toBe(100);
     expect(exp.status).toBe("done");
   });
 
-  it("reaches 100% overall and allComplete when every stage is finished", () => {
+  it("uses Live Scan + application for the license step (no PETH exam)", () => {
+    const partial = computeJourney(
+      { courses: [], profile: profile({ liveScanDone: true }) },
+      CA,
+    );
+    expect(partial.stages.find((s) => s.key === "license")!.percent).toBe(50);
+  });
+
+  it("reaches 100% overall and allComplete when every step is finished", () => {
     const j = computeJourney(
       {
         courses: licensedCourses(),
@@ -87,7 +108,7 @@ describe("computeJourney", () => {
           degreeLevel: "bachelors",
           examSectionsPassed: ["AUD", "FAR", "REG", "DISC"],
           experienceMonths: 12,
-          pethPassed: true,
+          liveScanDone: true,
           licenseSubmitted: true,
         }),
       },

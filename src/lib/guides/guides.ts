@@ -124,20 +124,20 @@ export const GUIDES: Guide[] = [
     id: "peth",
     stage: "ethics",
     emoji: "📘",
-    title: "Pass the PETH ethics exam",
+    title: "Ethics exam (PETH) — no longer required",
     summary:
-      "California requires the Professional Ethics for CPAs (PETH) exam, administered by CalCPA, before licensure. It's open-book and requires 90% to pass.",
+      "California removed the Professional Ethics for CPAs (PETH) exam on July 1, 2024. You no longer take it for licensure. (The 10 units of ethics study still count toward your 150 units.)",
     steps: [
-      "Purchase the PETH exam from CalCPA.",
-      "Work through the self-study materials.",
-      "Take the open-book exam online; you need 90% or higher.",
-      "Your passing score is reported toward your license.",
+      "No action needed — the PETH exam is no longer part of California licensure.",
+      "Make sure your 10 ethics-study units are covered in your coursework instead.",
     ],
-    links: [{ label: "CalCPA — Ethics (PETH) Exam", url: "https://www.calcpa.org/" }],
-    tips: [
-      "It's open-book but thorough — set aside real study time.",
-      "The pass is valid for a limited window before licensure, so time it near the end.",
+    links: [
+      {
+        label: "CBA — Initial Licensing FAQs",
+        url: "https://www.dca.ca.gov/cba/applicants/initial-license-faqs.shtml",
+      },
     ],
+    tips: ["If a study provider or older guide still lists PETH, it's out of date as of July 2024."],
   },
   {
     id: "apply-license",
@@ -145,11 +145,11 @@ export const GUIDES: Guide[] = [
     emoji: "🏅",
     title: "Apply for your CPA license",
     summary:
-      "After passing all exam sections, the PETH, clearing Live Scan, and completing experience, submit your licensure application to the CBA.",
+      "After passing all exam sections, clearing Live Scan, and completing experience, submit your licensure application to the CBA. (The PETH exam is no longer required.)",
     steps: [
       "Confirm all four CPA Exam sections are passed.",
       "Confirm 12 months of qualifying experience is verified by a licensed CPA.",
-      "Confirm PETH passed and Live Scan results are on file.",
+      "Confirm your Live Scan results are on file.",
       "Submit the licensure application and fees through your CBA account.",
     ],
     links: [{ label: "CBA — Applicants", url: "https://www.dca.ca.gov/cba/applicants/" }],

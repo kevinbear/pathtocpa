@@ -10,7 +10,7 @@ import {
 import type { RuleSet } from "../rules/types";
 
 export type StageStatus = "not_started" | "in_progress" | "done";
-export type StageKey = "education" | "exam" | "experience" | "ethics";
+export type StageKey = "qualify" | "exam" | "experience" | "licenseEd" | "license";
 
 export interface Stage {
   key: StageKey;
@@ -21,6 +21,8 @@ export interface Stage {
   percent: number;
   summary: string;
   nextActions: string[];
+  /** True for the Exam and Experience steps, which run concurrently. */
+  parallel?: boolean;
 }
 
 export interface Journey {
@@ -62,9 +64,18 @@ function statusFrom(percent: number): StageStatus {
 }
 
 /**
- * Derive the four-stage CPA journey from a student's coursework and profile.
- * Pure and deterministic. Education progress comes straight from the eligibility
- * engine; the later stages come from self-reported profile fields.
+ * Derive the CPA journey from coursework + profile, modeling California's real flow:
+ *
+ *   1. Qualify to SIT  — bachelor's + 24 accounting + 24 business (the exam verdict).
+ *   2. CPA Exam        ┐ these two run in PARALLEL — experience is not gated
+ *   3. Experience      ┘ behind the exam.
+ *   4. Licensure education — the full 150 units + 20 accounting study + 10 ethics
+ *      study (the license verdict). Needed for the license, not to sit.
+ *   5. Apply for license — Live Scan + submit the application. (The PETH ethics
+ *      exam was removed by California on July 1, 2024, so it's no longer a step.)
+ *
+ * Pure and deterministic. Education progress comes from the eligibility engine;
+ * later steps come from self-reported profile fields.
  */
 export function computeJourney(
   input: JourneyInput,
@@ -72,9 +83,9 @@ export function computeJourney(
   options: EvaluateOptions = {},
 ): Journey {
   const { profile } = input;
-
-  // --- Stage 1: Education (from the eligibility engine) ---
   const hasBachelors = profileHasBachelors(profile);
+  const bachelorPct = hasBachelors ? 100 : 0;
+
   const elig = evaluate(
     {
       courses: input.courses,
@@ -86,26 +97,27 @@ export function computeJourney(
     ruleSet,
     options,
   );
-  const bachelorPct = hasBachelors ? 100 : 0;
-  const educationPercent = elig.license.eligible
+
+  // --- Step 1: Qualify to sit (bachelor's + 24/24, from the EXAM verdict) ---
+  const qualifyPercent = elig.exam.eligible
     ? 100
-    : round(mean([bachelorPct, ...elig.license.categories.map((c) => c.percent)]));
-  const education: Stage = {
-    key: "education",
-    title: "Education",
+    : round(mean([bachelorPct, ...elig.exam.categories.map((c) => c.percent)]));
+  const qualify: Stage = {
+    key: "qualify",
+    title: "Qualify to sit",
     emoji: "🎓",
-    status: elig.license.eligible ? "done" : statusFrom(educationPercent),
-    percent: educationPercent,
-    summary: `${elig.totalSemesterUnits} of ${ruleSet.license.totalUnits} semester units`,
-    nextActions: elig.license.missing,
+    status: elig.exam.eligible ? "done" : statusFrom(qualifyPercent),
+    percent: qualifyPercent,
+    summary: elig.exam.eligible
+      ? "Eligible to sit — bachelor's + 24 accounting + 24 business ✓"
+      : "Bachelor's + 24 accounting + 24 business units",
+    nextActions: elig.exam.missing,
   };
 
-  // --- Stage 2: Exam ---
+  // --- Step 2: CPA Exam (parallel with experience) ---
   const passed = profile.examSectionsPassed.length;
   const examPercent = round(Math.min(100, (passed / EXAM_SLOTS.length) * 100));
-  const remainingSlots = EXAM_SLOTS.filter(
-    (s) => !profile.examSectionsPassed.includes(s.key),
-  );
+  const remainingSlots = EXAM_SLOTS.filter((s) => !profile.examSectionsPassed.includes(s.key));
   const exam: Stage = {
     key: "exam",
     title: "CPA Exam",
@@ -114,13 +126,12 @@ export function computeJourney(
     percent: examPercent,
     summary: `${passed} of ${EXAM_SLOTS.length} sections passed`,
     nextActions: remainingSlots.map((s) => `Pass ${s.label}`),
+    parallel: true,
   };
 
-  // --- Stage 3: Experience ---
+  // --- Step 3: Experience (parallel with the exam) ---
   const months = Math.max(0, profile.experienceMonths || 0);
-  const experiencePercent = round(
-    Math.min(100, (months / EXPERIENCE_MONTHS_REQUIRED) * 100),
-  );
+  const experiencePercent = round(Math.min(100, (months / EXPERIENCE_MONTHS_REQUIRED) * 100));
   const experience: Stage = {
     key: "experience",
     title: "Experience",
@@ -132,34 +143,50 @@ export function computeJourney(
       months >= EXPERIENCE_MONTHS_REQUIRED
         ? []
         : [`Log ${EXPERIENCE_MONTHS_REQUIRED - months} more month(s) of qualifying experience`],
+    parallel: true,
   };
 
-  // --- Stage 4: Ethics & License ---
-  const ethicsActions: string[] = [];
-  if (!profile.pethPassed) ethicsActions.push("Pass the PETH professional ethics exam");
-  if (!profile.licenseSubmitted) ethicsActions.push("Submit your CBA license application");
-  const ethicsPercent = (profile.pethPassed ? 50 : 0) + (profile.licenseSubmitted ? 50 : 0);
-  const ethics: Stage = {
-    key: "ethics",
-    title: "Ethics & License",
+  // --- Step 4: Finish licensure education (full 150 + study units, LICENSE verdict) ---
+  const licenseEdPercent = elig.license.eligible
+    ? 100
+    : round(mean([bachelorPct, ...elig.license.categories.map((c) => c.percent)]));
+  const licenseEd: Stage = {
+    key: "licenseEd",
+    title: "Licensure education",
+    emoji: "📚",
+    status: elig.license.eligible ? "done" : statusFrom(licenseEdPercent),
+    percent: licenseEdPercent,
+    summary: `${elig.totalSemesterUnits} of ${ruleSet.license.totalUnits} units · +20 accounting study · +10 ethics study`,
+    nextActions: elig.license.missing,
+  };
+
+  // --- Step 5: Apply for license (Live Scan + application; no PETH exam) ---
+  const liveScan = !!profile.liveScanDone;
+  const licenseActions: string[] = [];
+  if (!liveScan) licenseActions.push("Complete Live Scan fingerprinting");
+  if (!profile.licenseSubmitted) licenseActions.push("Submit your CBA license application");
+  const licensePercent = (liveScan ? 50 : 0) + (profile.licenseSubmitted ? 50 : 0);
+  const license: Stage = {
+    key: "license",
+    title: "Apply for license",
     emoji: "✅",
-    status: statusFrom(ethicsPercent),
-    percent: ethicsPercent,
+    status: statusFrom(licensePercent),
+    percent: licensePercent,
     summary: profile.licenseSubmitted
       ? "License application submitted"
-      : profile.pethPassed
-        ? "Ethics exam passed"
-        : "Not started",
-    nextActions: ethicsActions,
+      : liveScan
+        ? "Live Scan done — submit your application"
+        : "Live Scan + submit application",
+    nextActions: licenseActions,
   };
 
-  const stages = [education, exam, experience, ethics];
+  const stages = [qualify, exam, experience, licenseEd, license];
   const overallPercent = round(mean(stages.map((s) => s.percent)));
   const allComplete = stages.every((s) => s.status === "done");
 
   const current = stages.find((s) => s.status !== "done") ?? stages[stages.length - 1];
   const nextStep = allComplete
-    ? "🎉 You've completed every stage — congratulations, you're a CPA!"
+    ? "🎉 You've completed every step — congratulations, you're a CPA!"
     : current.nextActions[0] ?? `Continue your ${current.title.toLowerCase()} progress`;
 
   return {

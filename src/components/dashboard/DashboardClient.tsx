@@ -51,6 +51,7 @@ export default function DashboardClient() {
     profile.degreeLevel !== "none" ||
     profile.examSectionsPassed.length > 0 ||
     profile.experienceMonths > 0 ||
+    profile.liveScanDone ||
     profile.pethPassed ||
     profile.licenseSubmitted;
 
@@ -90,7 +91,7 @@ export default function DashboardClient() {
               <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
                 {journey.allComplete
                   ? "All stages complete"
-                  : `Stage ${currentIndex + 1} of 4 · ${currentStage?.title}`}
+                  : `Step ${currentIndex + 1} of ${journey.stages.length} · ${currentStage?.title}`}
               </p>
               <p className="mt-1 text-xl font-semibold text-slate-900">
                 Your next step
@@ -114,7 +115,7 @@ export default function DashboardClient() {
           </section>
 
           {/* Stage mini-cards */}
-          <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {journey.stages.map((s) => (
               <div key={s.key} className="card flex flex-col items-center text-center">
                 <ProgressRing percent={s.percent} size={84} stroke={8}>

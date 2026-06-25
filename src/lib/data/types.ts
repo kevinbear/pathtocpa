@@ -42,10 +42,18 @@ export interface Profile {
   firstSectionPassedDate?: string;
   /** Months of qualifying accounting experience completed (12 required). */
   experienceMonths: number;
-  /** Passed the PETH professional ethics exam. */
+  /** Passed the PETH professional ethics exam. DEPRECATED — CA removed this exam July 1, 2024. */
   pethPassed: boolean;
+  /** Completed Live Scan fingerprinting (a real licensure step; replaces the defunct PETH exam). */
+  liveScanDone?: boolean;
   /** Submitted the CBA license application. */
   licenseSubmitted: boolean;
+
+  // --- CPA review course (optional convenience link, opened from the Journey) ---
+  /** Label for the review platform (e.g. "Becker", "UWorld"). */
+  reviewPlatformName?: string;
+  /** URL to the student's review course dashboard. */
+  reviewPlatformUrl?: string;
 }
 
 export interface AppData {
