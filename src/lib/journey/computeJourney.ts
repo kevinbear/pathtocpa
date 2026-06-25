@@ -46,6 +46,23 @@ export const EXAM_SLOTS: { key: ExamSection; label: string }[] = [
   { key: "DISC", label: "Discipline (BAR / ISC / TCP)" },
 ];
 
+/** Exam slots in the student's planned order (falls back to the default order). */
+export function orderedExamSlots(order: ExamSection[] | undefined) {
+  if (!order || order.length === 0) return EXAM_SLOTS;
+  const byKey = new Map(EXAM_SLOTS.map((s) => [s.key, s]));
+  const seen = new Set<ExamSection>();
+  const result: typeof EXAM_SLOTS = [];
+  for (const k of order) {
+    const slot = byKey.get(k);
+    if (slot && !seen.has(k)) {
+      result.push(slot);
+      seen.add(k);
+    }
+  }
+  for (const s of EXAM_SLOTS) if (!seen.has(s.key)) result.push(s);
+  return result;
+}
+
 const EXPERIENCE_MONTHS_REQUIRED = 12;
 
 function round(n: number): number {
@@ -117,7 +134,10 @@ export function computeJourney(
   // --- Step 2: CPA Exam (parallel with experience) ---
   const passed = profile.examSectionsPassed.length;
   const examPercent = round(Math.min(100, (passed / EXAM_SLOTS.length) * 100));
-  const remainingSlots = EXAM_SLOTS.filter((s) => !profile.examSectionsPassed.includes(s.key));
+  // Remaining sections, listed in the student's planned order.
+  const remainingSlots = orderedExamSlots(profile.examOrder).filter(
+    (s) => !profile.examSectionsPassed.includes(s.key),
+  );
   const exam: Stage = {
     key: "exam",
     title: "CPA Exam",

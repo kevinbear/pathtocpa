@@ -30,6 +30,8 @@ export interface Profile {
   // --- Journey progress beyond education ---
   /** Which exam sections have been passed (subset of the 4 slots). */
   examSectionsPassed: ExamSection[];
+  /** The student's planned order for taking the 4 sections (defaults to AUD·FAR·REG·DISC). */
+  examOrder?: ExamSection[];
   /** Chosen discipline section, if decided. */
   disciplineChoice?: Discipline;
 

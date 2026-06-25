@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAppData } from "@/lib/data/AppDataProvider";
 import {
   computeJourney,
-  EXAM_SLOTS,
+  orderedExamSlots,
   type Stage,
   type StageKey,
 } from "@/lib/journey/computeJourney";
@@ -43,6 +43,15 @@ export default function JourneyClient() {
     setProfile({ examSectionsPassed: Array.from(set) });
   }
 
+  const orderedSlots = orderedExamSlots(profile.examOrder);
+  function moveSection(from: number, dir: -1 | 1) {
+    const keys = orderedSlots.map((s) => s.key);
+    const to = from + dir;
+    if (to < 0 || to >= keys.length) return;
+    [keys[from], keys[to]] = [keys[to], keys[from]];
+    setProfile({ examOrder: keys });
+  }
+
   function renderControls(stage: Stage) {
     switch (stage.key) {
       case "qualify":
@@ -66,19 +75,55 @@ export default function JourneyClient() {
       case "exam":
         return (
           <>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {EXAM_SLOTS.map((slot) => (
-                <label key={slot.key} className="flex items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
-                    checked={profile.examSectionsPassed.includes(slot.key)}
-                    onChange={(e) => toggleSection(slot.key, e.target.checked)}
-                  />
-                  {slot.label}
-                </label>
-              ))}
-            </div>
+            <p className="mt-3 text-xs font-medium text-slate-500">
+              Your planned order — use ▲▼ to rearrange, and check each section as you pass it.
+            </p>
+            <ol className="mt-2 space-y-2">
+              {orderedSlots.map((slot, i) => {
+                const isPassed = profile.examSectionsPassed.includes(slot.key);
+                return (
+                  <li
+                    key={slot.key}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-2 py-1.5"
+                  >
+                    <span className="w-5 shrink-0 text-center text-xs font-semibold text-slate-400">
+                      {i + 1}
+                    </span>
+                    <div className="flex shrink-0 flex-col leading-none">
+                      <button
+                        type="button"
+                        onClick={() => moveSection(i, -1)}
+                        disabled={i === 0}
+                        aria-label={`Move ${slot.key} earlier`}
+                        className="px-1 text-[11px] text-slate-400 hover:text-brand-600 disabled:opacity-30"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveSection(i, 1)}
+                        disabled={i === orderedSlots.length - 1}
+                        aria-label={`Move ${slot.key} later`}
+                        className="px-1 text-[11px] text-slate-400 hover:text-brand-600 disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                    <label className="flex flex-1 items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                        checked={isPassed}
+                        onChange={(e) => toggleSection(slot.key, e.target.checked)}
+                      />
+                      <span className={isPassed ? "text-slate-400 line-through" : ""}>
+                        {slot.label}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ol>
 
             <div className="mt-4 rounded-xl bg-slate-50 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -190,7 +235,7 @@ export default function JourneyClient() {
             <p className="mt-1 text-sm font-semibold text-brand-700">{stage.percent}%</p>
           </div>
         </div>
-        {stage.nextActions.length > 0 && (
+        {stage.nextActions.length > 0 && stage.key !== "exam" && (
           <ul className="mt-3 space-y-1 text-sm text-slate-600">
             {stage.nextActions.slice(0, 4).map((a) => (
               <li key={a} className="flex items-start gap-2">
