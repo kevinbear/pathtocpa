@@ -159,8 +159,11 @@ body {
    next face of a rotating cube (perspective + rotateY). No fill-mode, so the
    transform is dropped once it ends (keeps `position: fixed` descendants like the
    drag overlay anchored to the viewport, and avoids a lingering containing block). */
-/* Forward (e.g. → Allocate): swings in from the RIGHT, like the next cube face.
-   Fixed-rem offset (not %) so wide pages don't flash a horizontal scrollbar. */
+/* One consistent page-to-page transition (applied app-wide via app/template.tsx):
+   the incoming page swings in from the right like the next face of a rotating cube.
+   Fixed-rem offset (not %) so wide pages don't flash a horizontal scrollbar. No
+   fill-mode, so the transform is dropped once it ends (keeps `position: fixed`
+   descendants anchored to the viewport once the animation finishes). */
 @keyframes pathtocpa-cube-in {
   0% {
     opacity: 0;
@@ -174,34 +177,13 @@ body {
     transform: perspective(1600px) translateX(0) rotateY(0deg) scale(1);
   }
 }
-/* Back (e.g. Allocate → breakdown): mirrored — swings in from the LEFT. */
-@keyframes pathtocpa-cube-in-back {
-  0% {
-    opacity: 0;
-    transform: perspective(1600px) translateX(-6rem) rotateY(-45deg) scale(0.9);
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: perspective(1600px) translateX(0) rotateY(0deg) scale(1);
-  }
-}
-.slide-in-page,
-.slide-in-back {
+.slide-in-page {
   transform-origin: center center;
   backface-visibility: hidden;
-}
-.slide-in-page {
-  animation: pathtocpa-cube-in 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.slide-in-back {
-  animation: pathtocpa-cube-in-back 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pathtocpa-cube-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .slide-in-page,
-  .slide-in-back {
+  .slide-in-page {
     animation: none;
   }
 }

@@ -211,7 +211,7 @@ export default function BreakdownClient() {
   );
 
   return (
-    <main className="slide-in-back mx-auto max-w-[104rem] px-6 py-12">
+    <main className="mx-auto max-w-[104rem] px-6 py-12">
       <div className="mb-6">
         <div className="flex items-center justify-between gap-3">
           <Link href="/eligibility" className="text-sm font-medium text-brand-700 hover:underline">
