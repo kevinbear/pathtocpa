@@ -7,6 +7,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 const links = [
   { href: "/", label: "Home" },
+  { href: "/start", label: "Start" },
   { href: "/coursework", label: "Coursework" },
   { href: "/eligibility", label: "Eligibility" },
   { href: "/allocate", label: "Allocate" },

@@ -15,16 +15,24 @@ function WelcomeHero() {
         Welcome — let&apos;s map your path to CPA 🎓
       </h2>
       <p className="mx-auto mt-2 max-w-xl text-slate-600">
-        Start by adding your coursework. We&apos;ll instantly show whether you
-        meet California&apos;s education requirements and track every stage of
-        your licensure journey.
+        New here? Take the 1-minute plan finder — tell us your degree and major
+        and we&apos;ll recommend the best route. Or jump straight to adding your
+        coursework.
       </p>
-      <Link
-        href="/coursework"
-        className="mt-5 inline-block rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-oncolor shadow-soft transition-colors hover:bg-brand-700"
-      >
-        Add your coursework →
-      </Link>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <Link
+          href="/start"
+          className="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-oncolor shadow-soft transition-colors hover:bg-brand-700"
+        >
+          Find your best path →
+        </Link>
+        <Link
+          href="/coursework"
+          className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+        >
+          Add your coursework
+        </Link>
+      </div>
     </div>
   );
 }

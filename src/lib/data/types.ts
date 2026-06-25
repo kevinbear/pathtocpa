@@ -13,6 +13,8 @@ export interface Profile {
   degreeLevel: DegreeLevel;
   /** If a master's, the field — only accounting/taxation/laws-in-taxation waives Accounting Study. */
   mastersField?: MastersField;
+  /** Undergraduate major (from the plan-finder diagnosis), for tailored recommendations. */
+  undergradMajor?: "accounting" | "business" | "other";
   /** Optional ISO date the student is aiming to be licensed by. */
   targetLicenseDate?: string;
 
