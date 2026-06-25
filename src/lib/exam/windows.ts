@@ -40,10 +40,7 @@ export const EXAM_WINDOWS: ExamWindowDef[] = [
     startLabel: "Date your payment coupon / authorization was issued",
     sources: [
       { label: "CBA Exam FAQs", url: "https://www.dca.ca.gov/cba/applicants/exam-faqs.shtml" },
-      {
-        label: "NASBA application process",
-        url: "https://nasba.org/features/breaking-down-the-cpa-exam-application-process/",
-      },
+      { label: "Log in to NASBA", url: "https://okta.nasba.org/" },
     ],
   },
   {
@@ -58,7 +55,7 @@ export const EXAM_WINDOWS: ExamWindowDef[] = [
     startLabel: "Date your NTS was issued",
     sources: [
       { label: "CBA Exam FAQs", url: "https://www.dca.ca.gov/cba/applicants/exam-faqs.shtml" },
-      { label: "NASBA — the CPA Exam", url: "https://nasba.org/exams/cpaexam/" },
+      { label: "Log in to NASBA", url: "https://okta.nasba.org/" },
     ],
   },
   {
