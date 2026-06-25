@@ -110,7 +110,7 @@ export default function CourseworkClient() {
 
       <div className="space-y-8">
         {/* Import + add form, side by side. The form fades out while importing. */}
-        <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-2"}`}>
+        <div className={`grid items-start gap-6 ${importing ? "lg:grid-cols-1" : "lg:grid-cols-[27rem_minmax(0,1fr)]"}`}>
           <ImportPanel onPreviewActive={setImporting} />
 
           <div
