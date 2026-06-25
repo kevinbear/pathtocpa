@@ -19,6 +19,9 @@
   --c-slate-800: 30 41 59;
   --c-slate-900: 15 23 42;
   --c-slate-950: 2 6 23;
+
+  /* Form-control fill (white in light mode). */
+  --c-input: 255 255 255;
 }
 
 /* Dark mode: invert surfaces/text. Cards (white) become a lifted dark slate;
@@ -39,6 +42,22 @@
   --c-slate-800: 241 245 249;
   --c-slate-900: 248 250 252;
   --c-slate-950: 255 255 255;
+
+  /* Inputs sit slightly darker than cards for an inset look. */
+  --c-input: 15 23 42;
+}
+
+/* Form controls follow the theme instead of the browser-default white. */
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    background-color: rgb(var(--c-input));
+    color: rgb(var(--foreground));
+  }
+  ::placeholder {
+    color: rgb(var(--c-slate-400));
+  }
 }
 
 /* Accent themes — RGB triplets consumed by Tailwind's `brand` color scale.

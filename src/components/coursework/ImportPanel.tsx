@@ -91,7 +91,7 @@ export default function ImportPanel() {
   }
 
   return (
-    <div className="card mb-8">
+    <div className="card">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
@@ -104,7 +104,7 @@ export default function ImportPanel() {
         </div>
         <button
           onClick={() => setShowTutorial((s) => !s)}
-          className="rounded-full px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50"
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
         >
           {showTutorial ? "Hide tutorial" : "How does this work?"}
         </button>
@@ -171,12 +171,12 @@ export default function ImportPanel() {
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <button
           onClick={() => fileRef.current?.click()}
-          className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
+          className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
         >
-          Choose file…
+          📂 Choose file…
         </button>
         <input
           ref={fileRef}
@@ -188,14 +188,17 @@ export default function ImportPanel() {
             if (f) handleFile(f);
           }}
         />
-        <button onClick={downloadCsvTemplate} className="text-sm font-medium text-brand-700 underline">
-          Download CSV template
+        <button
+          onClick={downloadCsvTemplate}
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+        >
+          ⬇ CSV template
         </button>
         <button
           onClick={() => downloadXlsxTemplate()}
-          className="text-sm font-medium text-brand-700 underline"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
         >
-          Download Excel template
+          ⬇ Excel template
         </button>
         {fileName && !busy && (
           <span className="text-xs text-slate-500">Selected: {fileName}</span>

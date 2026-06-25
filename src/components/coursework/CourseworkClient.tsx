@@ -90,8 +90,8 @@ export default function CourseworkClient() {
       </div>
 
       <div className="space-y-8">
-        {/* Import + add form (constrained width) */}
-        <div className="max-w-3xl">
+        {/* Import + add form, side by side */}
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           <ImportPanel />
 
           <form onSubmit={handleSubmit} className="card">
