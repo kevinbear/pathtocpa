@@ -131,23 +131,6 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the pieces fit togeth
 
 ---
 
-## 🧭 Project status
-
-Built in milestones — see [`docs/PLAN.md`](docs/PLAN.md) for the full plan.
-
-- [x] **M1 — Scaffold** (Next.js + Tailwind, theme, docs)
-- [x] **M2 — California rules engine + eligibility checker** (pure engine + tests)
-- [x] **M3 — Coursework + eligibility UI** (local storage)
-- [x] **CSV / Excel import** (validated preview, templates, tutorial)
-- [x] **M4 — Journey tracker + dashboard** (progress rings, stage tracking)
-- [x] **M5 — Cost tracker** (planned-vs-paid, CA template, CSV export)
-- [x] **M6 — Accounts + cloud sync** (Supabase auth + per-user data with RLS)
-- [ ] **M7 — Polish + deploy** (public URL on Vercel)
-
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full list of shipped features and what's next.
-
----
-
 ## 🤝 Contributing
 
 Contributions are welcome — especially keeping the California rules accurate and (eventually)
