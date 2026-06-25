@@ -41,7 +41,7 @@ function ActionChevron() {
 function TimelineDot({ children }: { children: ReactNode }) {
   return (
     <span
-      className="absolute -left-[3.05rem] top-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-base shadow-sm ring-4 ring-[rgb(var(--background))]"
+      className="absolute -left-[3.2rem] top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-brand-400 bg-brand-100 text-base shadow-sm ring-4 ring-[rgb(var(--background))]"
       aria-hidden="true"
     >
       {children}
@@ -269,7 +269,20 @@ export default function JourneyClient() {
 
             {/* Steps 2 & 3 run concurrently. Exam sits beside its deadline windows. */}
             <li className="relative">
-              <TimelineDot>⇄</TimelineDot>
+              <TimelineDot>
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4 text-brand-800"
+                >
+                  <path d="M6 7.5h9M12 4.5l3 3-3 3" />
+                  <path d="M14 12.5H5M8 9.5l-3 3 3 3" />
+                </svg>
+              </TimelineDot>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-600">
                 Steps 2 &amp; 3 — these run in parallel
               </p>

@@ -230,7 +230,9 @@ function ToggleBtn({
     <button
       onClick={onClick}
       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-        active ? "bg-brand-100 text-brand-800" : "text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"
+        active
+          ? "bg-brand-100 text-brand-800 ring-1 ring-brand-300"
+          : "bg-white text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50"
       }`}
     >
       {children}

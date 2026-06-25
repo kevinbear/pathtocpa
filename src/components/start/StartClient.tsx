@@ -214,7 +214,7 @@ export default function StartClient() {
           {LICENSURE_PATHWAYS.map((p) => (
             <div
               key={p.key}
-              className={`card ${p.isNew ? "border-amber-200 ring-1 ring-amber-100" : ""}`}
+              className={`card ${p.isNew ? "ring-2 ring-amber-400" : ""}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold text-slate-900">{p.name}</h3>
