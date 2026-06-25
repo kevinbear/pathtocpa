@@ -276,7 +276,7 @@ export default function ImportPanel({
                         <input
                           className={fieldClass(false)}
                           value={d.code}
-                          placeholder="ACCT 415"
+                          placeholder="ACCT 301A"
                           onChange={(ev) => updateDraft(i, { code: ev.target.value })}
                         />
                       </td>

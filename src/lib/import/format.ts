@@ -99,7 +99,7 @@ export const COLUMN_DOCS: {
   accepts: string;
   example: string;
 }[] = [
-  { header: "code", required: false, accepts: "Course code / catalog number", example: "ACCT 415" },
+  { header: "code", required: false, accepts: "Course code / catalog number", example: "ACCT 301A" },
   { header: "name", required: true, accepts: "Any text (the course name)", example: "Intermediate Accounting I" },
   { header: "units", required: true, accepts: "A number greater than 0", example: "3" },
   {

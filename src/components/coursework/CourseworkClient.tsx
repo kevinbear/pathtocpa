@@ -144,7 +144,7 @@ export default function CourseworkClient() {
                   className={inputClass}
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
-                  placeholder="ACCT 415"
+                  placeholder="ACCT 301A"
                 />
               </label>
 

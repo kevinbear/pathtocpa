@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: 248 250 252;
+  --background: 228 233 240;
   --foreground: 15 23 42;
 
   /* Surfaces & text (light). Mirrors Tailwind's white + slate scale. */
