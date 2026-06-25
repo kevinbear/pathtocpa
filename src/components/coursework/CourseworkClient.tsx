@@ -191,7 +191,6 @@ export default function CourseworkClient() {
   return (
     <main className="mx-auto max-w-[104rem] px-6 py-12">
       <div className="space-y-8">
-      <div className="mx-auto max-w-7xl">
       <div className="mb-8">
         <span className="pill bg-brand-100 text-brand-800">Coursework</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -363,7 +362,6 @@ export default function CourseworkClient() {
             </div>
           </form>
           </div>
-        </div>
         </div>
 
         {/* Courses table (full width) */}

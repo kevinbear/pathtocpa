@@ -5,15 +5,16 @@ import { usePathname } from "next/navigation";
 import AuthMenu from "@/components/AuthMenu";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
+// Top-nav tabs. Allocate is intentionally omitted (you reach it from the
+// Eligibility → breakdown page); Guides live alongside the Journey page and in
+// the footer rather than as their own tab.
 const links = [
   { href: "/", label: "Home" },
   { href: "/start", label: "Start" },
+  { href: "/journey", label: "Journey" },
   { href: "/coursework", label: "Coursework" },
   { href: "/eligibility", label: "Eligibility" },
-  { href: "/allocate", label: "Allocate" },
-  { href: "/journey", label: "Journey" },
   { href: "/costs", label: "Costs" },
-  { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },
 ];
 

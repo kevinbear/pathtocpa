@@ -184,6 +184,20 @@ export default function JourneyClient() {
             ))}
           </ol>
 
+          {/* Guides live alongside the journey — deep dives on each stage. */}
+          <Link
+            href="/guides"
+            className="card mt-8 flex items-center justify-between gap-4 transition-colors hover:bg-slate-50"
+          >
+            <div>
+              <p className="font-semibold text-slate-900">📚 Step-by-step guides</p>
+              <p className="text-sm text-slate-500">
+                Detailed walkthroughs for each stage — education, exam, experience, and ethics.
+              </p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-brand-700">Open guides →</span>
+          </Link>
+
           <p className="mt-8 text-xs text-slate-400">
             Stage definitions follow the {californiaRuleSet.authority}. This is a
             planning aid, not official advice — rules last verified{" "}

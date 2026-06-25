@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import { AppDataProvider } from "@/lib/data/AppDataProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -29,6 +30,7 @@ export default function RootLayout({
         <AppDataProvider>
           <Nav />
           {children}
+          <Footer />
         </AppDataProvider>
       </body>
     </html>
