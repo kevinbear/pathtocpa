@@ -559,7 +559,7 @@ export default function AllocateClient() {
             </div>
 
             {/* Requirement sections */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {ALLOCATION_TAXONOMY.map((section) => {
                 const inSection = courses.filter((c) => c.category === section.key);
                 const total = sum(inSection);
@@ -570,7 +570,7 @@ export default function AllocateClient() {
                 );
                 const isOpen = expanded.has(section.key);
                 return (
-                  <div key={section.key} className="card h-fit">
+                  <div key={section.key} className="card h-fit min-w-0">
                     <button
                       onClick={() => toggleExpand(section.key)}
                       className="flex w-full items-start justify-between gap-2 text-left"
