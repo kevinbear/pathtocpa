@@ -236,6 +236,20 @@ export default function JourneyClient() {
             </div>
           </div>
 
+          {/* Guides live alongside the journey — deep dives on each step. */}
+          <Link
+            href="/guides"
+            className="card mb-8 flex items-center justify-between gap-4 transition-colors hover:bg-slate-50"
+          >
+            <div>
+              <p className="font-semibold text-slate-900">📚 Step-by-step guides</p>
+              <p className="text-sm text-slate-500">
+                Detailed walkthroughs for each step — education, exam, experience, and licensure.
+              </p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-brand-700">Open guides →</span>
+          </Link>
+
           <div className="space-y-6">
             <StageCard stage={byKey.qualify} label="Step 1" />
 
@@ -256,20 +270,6 @@ export default function JourneyClient() {
             <StageCard stage={byKey.licenseEd} label="Step 4" />
             <StageCard stage={byKey.license} label="Step 5" />
           </div>
-
-          {/* Guides live alongside the journey — deep dives on each step. */}
-          <Link
-            href="/guides"
-            className="card mt-8 flex items-center justify-between gap-4 transition-colors hover:bg-slate-50"
-          >
-            <div>
-              <p className="font-semibold text-slate-900">📚 Step-by-step guides</p>
-              <p className="text-sm text-slate-500">
-                Detailed walkthroughs for each step — education, exam, experience, and licensure.
-              </p>
-            </div>
-            <span className="shrink-0 text-sm font-semibold text-brand-700">Open guides →</span>
-          </Link>
 
           <p className="mt-8 text-xs text-slate-400">
             Stage definitions follow the {californiaRuleSet.authority}. This is a planning aid, not
