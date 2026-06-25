@@ -3,9 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --muted: #64748b;
+  --background: 248 250 252;
+  --foreground: 15 23 42;
+
+  /* Surfaces & text (light). Mirrors Tailwind's white + slate scale. */
+  --c-white: 255 255 255;
+  --c-slate-50: 248 250 252;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 100 116 139;
+  --c-slate-600: 71 85 105;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-slate-950: 2 6 23;
+}
+
+/* Dark mode: invert surfaces/text. Cards (white) become a lifted dark slate;
+   light backgrounds become dark; dark text becomes light. */
+.dark {
+  --background: 2 6 23;
+  --foreground: 241 245 249;
+
+  --c-white: 30 41 59;
+  --c-slate-50: 51 65 85;
+  --c-slate-100: 51 65 85;
+  --c-slate-200: 71 85 105;
+  --c-slate-300: 100 116 139;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 148 163 184;
+  --c-slate-600: 203 213 225;
+  --c-slate-700: 226 232 240;
+  --c-slate-800: 241 245 249;
+  --c-slate-900: 248 250 252;
+  --c-slate-950: 255 255 255;
 }
 
 /* Accent themes — RGB triplets consumed by Tailwind's `brand` color scale.
@@ -81,8 +114,8 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -93,5 +126,12 @@ body {
   }
   .pill {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  /* Always-white text for labels sitting on colored buttons (stays white in dark mode). */
+  .text-oncolor {
+    color: #ffffff;
   }
 }

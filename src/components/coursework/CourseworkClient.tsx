@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { useAppData } from "@/lib/data/AppDataProvider";
-import { profileWaivesAccountingStudy } from "@/lib/data/types";
 import ImportPanel from "@/components/coursework/ImportPanel";
-import ProgressBar from "@/components/ProgressBar";
-import { CATEGORIES, CATEGORY_LABEL } from "@/lib/eligibility/categories";
+import RequirementProgressWidget from "@/components/coursework/RequirementProgressWidget";
+import ConfirmModal from "@/components/ConfirmModal";
+import { CATEGORIES } from "@/lib/eligibility/categories";
 import { toSemesterUnits, round2 } from "@/lib/eligibility/units";
-import californiaRuleSet from "@/lib/rules/california";
 import type { Course, CourseCategory, UnitType } from "@/lib/eligibility/types";
 
 type FormState = {
@@ -32,21 +30,13 @@ const EMPTY_FORM: FormState = {
 };
 
 export default function CourseworkClient() {
-  const { hydrated, courses, profile, addCourse, updateCourse, deleteCourse } = useAppData();
+  const { hydrated, courses, addCourse, updateCourse, deleteCourse } = useAppData();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const tally = useMemo(() => {
-    const by: Record<string, number> = {};
-    let total = 0;
-    for (const c of courses) {
-      const u = toSemesterUnits(c.units, c.unitType);
-      by[c.category] = (by[c.category] ?? 0) + u;
-      total += u;
-    }
-    return { by, total: round2(total) };
-  }, [courses]);
+  const deleteTarget = courses.find((c) => c.id === deleteId);
 
   function resetForm() {
     setForm(EMPTY_FORM);
@@ -72,29 +62,13 @@ export default function CourseworkClient() {
     };
 
     if (editingId) updateCourse(editingId, payload);
-    else addCourse(payload);
+    else addCourse({ ...payload, locked: true }); // new rows are locked by default
     resetForm();
   }
 
 
   const inputClass =
     "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
-
-  const rules = californiaRuleSet.license;
-  const waived = profileWaivesAccountingStudy(profile);
-  const overflow = Math.max(0, round2((tally.by.accounting ?? 0) - rules.accounting));
-  const reqRows = [
-    { key: "accounting", label: "Accounting", current: round2(tally.by.accounting ?? 0), required: rules.accounting },
-    { key: "business", label: "Business-related", current: round2((tally.by.business ?? 0) + overflow), required: rules.business },
-    {
-      key: "accountingStudy",
-      label: waived ? "Accounting study (waived)" : "Accounting study",
-      current: waived ? rules.accountingStudy : round2(tally.by.accountingStudy ?? 0),
-      required: rules.accountingStudy,
-    },
-    { key: "ethics", label: "Ethics study", current: round2(tally.by.ethics ?? 0), required: rules.ethics },
-  ];
-  const pct = (c: number, r: number) => (r === 0 ? 100 : Math.min(100, Math.round((c / r) * 100)));
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
@@ -109,9 +83,9 @@ export default function CourseworkClient() {
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
-        {/* Left: import + form + list */}
-        <div>
+      <div className="space-y-8">
+        {/* Import + add form (constrained width) */}
+        <div className="max-w-3xl">
           <ImportPanel />
 
           <form onSubmit={handleSubmit} className="card">
@@ -214,7 +188,7 @@ export default function CourseworkClient() {
             <div className="mt-4 flex gap-2">
               <button
                 type="submit"
-                className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+                className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor transition-colors hover:bg-brand-700"
               >
                 {editingId ? "Save changes" : "Add course"}
               </button>
@@ -231,70 +205,8 @@ export default function CourseworkClient() {
           </form>
         </div>
 
-        {/* Right: live requirement progress */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
-          <div className="card">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-600">
-              Requirement progress
-            </h2>
-            <p className="mt-1 text-xs text-slate-400">
-              Semester units toward each California requirement.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              {reqRows.map((r) => {
-                const done = r.current + 1e-6 >= r.required;
-                return (
-                  <div key={r.key}>
-                    <div className="mb-1 flex justify-between text-xs">
-                      <span className="font-medium text-slate-600">{r.label}</span>
-                      <span className="text-slate-500">
-                        {r.current} / {r.required}
-                        {done && <span className="text-brand-600"> ✓</span>}
-                      </span>
-                    </div>
-                    <ProgressBar percent={pct(r.current, r.required)} satisfied={done} />
-                  </div>
-                );
-              })}
-
-              <div className="border-t border-slate-100 pt-3">
-                <div className="mb-1 flex justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Total units</span>
-                  <span className="text-slate-500">
-                    {tally.total} / {rules.totalUnits}
-                    {tally.total + 1e-6 >= rules.totalUnits && (
-                      <span className="text-brand-600"> ✓</span>
-                    )}
-                  </span>
-                </div>
-                <ProgressBar
-                  percent={pct(tally.total, rules.totalUnits)}
-                  satisfied={tally.total + 1e-6 >= rules.totalUnits}
-                />
-              </div>
-            </div>
-
-            {(tally.by.other ?? 0) > 0 && (
-              <div className="mt-3 flex justify-between text-xs text-slate-400">
-                <span>Other units (toward total only)</span>
-                <span className="font-semibold text-slate-600">
-                  {round2(tally.by.other ?? 0)}
-                </span>
-              </div>
-            )}
-
-            <Link
-              href="/eligibility"
-              className="mt-5 block rounded-full bg-brand-600 px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-            >
-              Check my eligibility →
-            </Link>
-          </div>
-        </aside>
-
-        {/* Full-width courses table (spans both columns) */}
-        <div className="lg:col-span-2">
+        {/* Courses table (full width) */}
+        <div>
           <div className="mt-2 mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Your courses ({courses.length})
@@ -420,7 +332,7 @@ export default function CourseworkClient() {
                               {locked ? "🔒" : "🔓"}
                             </button>
                             <button
-                              onClick={() => deleteCourse(c.id)}
+                              onClick={() => setDeleteId(c.id)}
                               disabled={locked}
                               title={locked ? "Unlock to delete" : "Delete"}
                               className="rounded-full px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-30"
@@ -438,6 +350,23 @@ export default function CourseworkClient() {
           )}
         </div>
       </div>
+
+      <RequirementProgressWidget />
+
+      <ConfirmModal
+        open={!!deleteId}
+        title="Delete course?"
+        message={
+          deleteTarget
+            ? `Remove "${deleteTarget.name}" from your coursework? This can't be undone.`
+            : "Remove this course?"
+        }
+        onConfirm={() => {
+          if (deleteId) deleteCourse(deleteId);
+          setDeleteId(null);
+        }}
+        onCancel={() => setDeleteId(null)}
+      />
     </main>
   );
 }

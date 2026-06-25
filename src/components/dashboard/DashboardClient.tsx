@@ -21,7 +21,7 @@ function WelcomeHero() {
       </p>
       <Link
         href="/coursework"
-        className="mt-5 inline-block rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-700"
+        className="mt-5 inline-block rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-oncolor shadow-soft transition-colors hover:bg-brand-700"
       >
         Add your coursework →
       </Link>
@@ -90,7 +90,7 @@ export default function DashboardClient() {
               <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
                 <Link
                   href="/journey"
-                  className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                  className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
                 >
                   View your journey
                 </Link>

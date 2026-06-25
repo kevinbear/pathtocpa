@@ -105,7 +105,7 @@ export default function EligibilityClient() {
           </p>
           <Link
             href="/coursework"
-            className="mt-4 inline-block rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="mt-4 inline-block rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
           >
             Add coursework →
           </Link>

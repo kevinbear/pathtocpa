@@ -35,7 +35,7 @@ export default function JourneyClient() {
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/coursework"
-              className="rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+              className="rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-oncolor hover:bg-brand-700"
             >
               Edit coursework
             </Link>

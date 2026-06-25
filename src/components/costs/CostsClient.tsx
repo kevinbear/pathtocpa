@@ -300,7 +300,7 @@ export default function CostsClient() {
             <div className="mt-4 flex gap-2">
               <button
                 type="submit"
-                className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
               >
                 {editingId ? "Save changes" : "Add expense"}
               </button>
@@ -422,7 +422,7 @@ export default function CostsClient() {
                             </button>
                             <button
                               onClick={() => adjustInstallment(e, 1)}
-                              className="rounded-full bg-brand-600 px-2 py-0.5 font-medium text-white hover:bg-brand-700"
+                              className="rounded-full bg-brand-600 px-2 py-0.5 font-medium text-oncolor hover:bg-brand-700"
                             >
                               + mark paid
                             </button>

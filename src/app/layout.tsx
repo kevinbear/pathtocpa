@@ -21,7 +21,7 @@ export default function RootLayout({
         {/* Apply the saved color theme before paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('pathtocpa.theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('pathtocpa.theme');if(t)document.documentElement.setAttribute('data-theme',t);var m=localStorage.getItem('pathtocpa.mode');if(m==='dark')document.documentElement.classList.add('dark');}catch(e){}`,
           }}
         />
       </head>

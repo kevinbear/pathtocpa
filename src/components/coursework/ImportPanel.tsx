@@ -174,7 +174,7 @@ export default function ImportPanel() {
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           onClick={() => fileRef.current?.click()}
-          className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor hover:bg-brand-700"
         >
           Choose file…
         </button>
@@ -346,7 +346,7 @@ export default function ImportPanel() {
             <button
               onClick={doImport}
               disabled={validCount === 0}
-              className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-oncolor transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               Import {validCount} course{validCount === 1 ? "" : "s"}
             </button>
