@@ -422,7 +422,7 @@ export default function AllocateClient() {
 
   return (
     <BoardCtx.Provider value={board}>
-      <main className="slide-in-page mx-auto max-w-7xl px-6 py-12">
+      <main className="slide-in-page mx-auto max-w-[104rem] px-6 py-12">
         <div className="mb-6">
           <Link href="/eligibility/breakdown" className="text-sm font-medium text-brand-700 hover:underline">
             ← Back to breakdown

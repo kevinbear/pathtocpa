@@ -25,7 +25,7 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+      <nav className="mx-auto flex max-w-[104rem] items-center justify-between gap-4 px-6 py-3">
         <Link href="/" className="shrink-0 text-lg font-bold tracking-tight text-slate-900">
           Path<span className="text-brand-600">To</span>CPA
         </Link>

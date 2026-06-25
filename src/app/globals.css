@@ -159,11 +159,12 @@ body {
    next face of a rotating cube (perspective + rotateY). No fill-mode, so the
    transform is dropped once it ends (keeps `position: fixed` descendants like the
    drag overlay anchored to the viewport, and avoids a lingering containing block). */
-/* Forward (e.g. → Allocate): swings in from the RIGHT, like the next cube face. */
+/* Forward (e.g. → Allocate): swings in from the RIGHT, like the next cube face.
+   Fixed-rem offset (not %) so wide pages don't flash a horizontal scrollbar. */
 @keyframes pathtocpa-cube-in {
   0% {
     opacity: 0;
-    transform: perspective(1600px) translateX(42%) rotateY(48deg) scale(0.92);
+    transform: perspective(1600px) translateX(6rem) rotateY(45deg) scale(0.9);
   }
   55% {
     opacity: 1;
@@ -177,7 +178,7 @@ body {
 @keyframes pathtocpa-cube-in-back {
   0% {
     opacity: 0;
-    transform: perspective(1600px) translateX(-42%) rotateY(-48deg) scale(0.92);
+    transform: perspective(1600px) translateX(-6rem) rotateY(-45deg) scale(0.9);
   }
   55% {
     opacity: 1;
