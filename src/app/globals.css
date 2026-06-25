@@ -155,21 +155,27 @@ body {
   }
 }
 
-/* Slide-deck page transition — content slides in from the right on navigation.
-   No fill-mode, so the transform is dropped once the animation ends (keeps
-   `position: fixed` descendants like the drag overlay anchored to the viewport). */
-@keyframes pathtocpa-slide-in {
+/* 3D cube page transition — the incoming page swings in from the right like the
+   next face of a rotating cube (perspective + rotateY). No fill-mode, so the
+   transform is dropped once it ends (keeps `position: fixed` descendants like the
+   drag overlay anchored to the viewport, and avoids a lingering containing block). */
+@keyframes pathtocpa-cube-in {
   0% {
     opacity: 0;
-    transform: translateX(2.5rem);
+    transform: perspective(1600px) translateX(42%) rotateY(48deg) scale(0.92);
+  }
+  55% {
+    opacity: 1;
   }
   100% {
     opacity: 1;
-    transform: translateX(0);
+    transform: perspective(1600px) translateX(0) rotateY(0deg) scale(1);
   }
 }
 .slide-in-page {
-  animation: pathtocpa-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  animation: pathtocpa-cube-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   .slide-in-page {
