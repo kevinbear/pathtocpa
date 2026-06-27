@@ -35,6 +35,12 @@ export interface Profile {
   /** Chosen discipline section, if decided. */
   disciplineChoice?: Discipline;
 
+  // --- Apply to sit: the CBA verifies your education (transcripts + fee) before you can sit ---
+  /** Official transcripts sent directly to the CBA (part of the exam application). */
+  transcriptsSentToCBA?: boolean;
+  /** Submitted the CPA Exam application + fee to the CBA, to be approved to sit. */
+  examApplicationSubmitted?: boolean;
+
   // --- Exam deadline windows (ISO yyyy-mm-dd; each starts a countdown) ---
   /** Payment coupon / Authorization to Test issued — starts the 90-day pay window. */
   attIssuedDate?: string;

@@ -10,7 +10,13 @@ import {
 import type { RuleSet } from "../rules/types";
 
 export type StageStatus = "not_started" | "in_progress" | "done";
-export type StageKey = "qualify" | "exam" | "experience" | "licenseEd" | "license";
+export type StageKey =
+  | "qualify"
+  | "applySit"
+  | "exam"
+  | "experience"
+  | "licenseEd"
+  | "license";
 
 export interface Stage {
   key: StageKey;
@@ -84,12 +90,16 @@ function statusFrom(percent: number): StageStatus {
  * Derive the CPA journey from coursework + profile, modeling California's real flow:
  *
  *   1. Qualify to SIT  — bachelor's + 24 accounting + 24 business (the exam verdict).
- *   2. CPA Exam        ┐ these two run in PARALLEL — experience is not gated
- *   3. Experience      ┘ behind the exam.
- *   4. Licensure education — the full 150 units + 20 accounting study + 10 ethics
+ *   2. Apply to sit    — send official transcripts + the exam application & fee to the
+ *      CBA, which VERIFIES your education before authorizing you to sit. (We compute
+ *      eligibility ourselves, but the CBA is the one that actually approves it.)
+ *   3. CPA Exam        ┐ these two run in PARALLEL — experience is not gated
+ *   4. Experience      ┘ behind the exam.
+ *   5. Licensure education — the full 150 units + 20 accounting study + 10 ethics
  *      study (the license verdict). Needed for the license, not to sit.
- *   5. Apply for license — Live Scan + submit the application. (The PETH ethics
- *      exam was removed by California on July 1, 2024, so it's no longer a step.)
+ *   6. Apply for license — Live Scan + final transcripts + experience verification +
+ *      submit the application & fee (the CBA verifies everything and licenses you).
+ *      (The PETH ethics exam was removed by California on July 1, 2024.)
  *
  * Pure and deterministic. Education progress comes from the eligibility engine;
  * later steps come from self-reported profile fields.
@@ -131,7 +141,28 @@ export function computeJourney(
     nextActions: elig.exam.missing,
   };
 
-  // --- Step 2: CPA Exam (parallel with experience) ---
+  // --- Step 2: Apply to sit — CBA verifies your education (transcripts + application + fee) ---
+  const transcriptsSent = !!profile.transcriptsSentToCBA;
+  const appSubmitted = !!profile.examApplicationSubmitted;
+  const applySitActions: string[] = [];
+  if (!transcriptsSent)
+    applySitActions.push("Have your college(s) send official transcripts directly to the CBA");
+  if (!appSubmitted) applySitActions.push("Submit the CPA Exam application and pay the fee");
+  const applySitPercent = (transcriptsSent ? 50 : 0) + (appSubmitted ? 50 : 0);
+  const applySit: Stage = {
+    key: "applySit",
+    title: "Apply to sit",
+    emoji: "📄",
+    status: statusFrom(applySitPercent),
+    percent: applySitPercent,
+    summary:
+      transcriptsSent && appSubmitted
+        ? "Application + transcripts submitted — CBA verifying your education"
+        : "Send transcripts + apply so the CBA can approve you to sit",
+    nextActions: applySitActions,
+  };
+
+  // --- Step 3: CPA Exam (parallel with experience) ---
   const passed = profile.examSectionsPassed.length;
   const examPercent = round(Math.min(100, (passed / EXAM_SLOTS.length) * 100));
   // Remaining sections, listed in the student's planned order.
@@ -149,7 +180,7 @@ export function computeJourney(
     parallel: true,
   };
 
-  // --- Step 3: Experience (parallel with the exam) ---
+  // --- Step 4: Experience (parallel with the exam) ---
   const months = Math.max(0, profile.experienceMonths || 0);
   const experiencePercent = round(Math.min(100, (months / EXPERIENCE_MONTHS_REQUIRED) * 100));
   const experience: Stage = {
@@ -166,7 +197,7 @@ export function computeJourney(
     parallel: true,
   };
 
-  // --- Step 4: Finish licensure education (full 150 + study units, LICENSE verdict) ---
+  // --- Step 5: Finish licensure education (full 150 + study units, LICENSE verdict) ---
   const licenseEdPercent = elig.license.eligible
     ? 100
     : round(mean([bachelorPct, ...elig.license.categories.map((c) => c.percent)]));
@@ -180,7 +211,7 @@ export function computeJourney(
     nextActions: elig.license.missing,
   };
 
-  // --- Step 5: Apply for license (Live Scan + application; no PETH exam) ---
+  // --- Step 6: Apply for license (Live Scan + final transcripts + application; no PETH exam) ---
   const liveScan = !!profile.liveScanDone;
   const licenseActions: string[] = [];
   if (!liveScan) licenseActions.push("Complete Live Scan fingerprinting");
@@ -200,7 +231,7 @@ export function computeJourney(
     nextActions: licenseActions,
   };
 
-  const stages = [qualify, exam, experience, licenseEd, license];
+  const stages = [qualify, applySit, exam, experience, licenseEd, license];
   const overallPercent = round(mean(stages.map((s) => s.percent)));
   const allComplete = stages.every((s) => s.status === "done");
 

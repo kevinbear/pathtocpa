@@ -44,20 +44,39 @@ function licensedCourses(): Course[] {
   ];
 }
 
-describe("computeJourney — 5-step model", () => {
-  it("starts everyone at 'qualify to sit' with 0% and five steps", () => {
+describe("computeJourney — 6-step model", () => {
+  it("starts everyone at 'qualify to sit' with 0% and six steps", () => {
     const j = computeJourney({ courses: [], profile: profile() }, CA);
     expect(j.currentStageKey).toBe("qualify");
     expect(j.overallPercent).toBe(0);
     expect(j.allComplete).toBe(false);
-    expect(j.stages).toHaveLength(5);
+    expect(j.stages).toHaveLength(6);
     expect(j.stages.map((s) => s.key)).toEqual([
       "qualify",
+      "applySit",
       "exam",
       "experience",
       "licenseEd",
       "license",
     ]);
+  });
+
+  it("tracks 'apply to sit' from transcripts + exam application (each 50%)", () => {
+    const half = computeJourney(
+      { courses: [], profile: profile({ transcriptsSentToCBA: true }) },
+      CA,
+    );
+    const applySit = half.stages.find((s) => s.key === "applySit")!;
+    expect(applySit.percent).toBe(50);
+
+    const full = computeJourney(
+      {
+        courses: [],
+        profile: profile({ transcriptsSentToCBA: true, examApplicationSubmitted: true }),
+      },
+      CA,
+    );
+    expect(full.stages.find((s) => s.key === "applySit")!.status).toBe("done");
   });
 
   it("separates sitting from licensure: 24/24 + degree qualifies to sit but NOT licensure education", () => {
@@ -106,6 +125,8 @@ describe("computeJourney — 5-step model", () => {
         courses: licensedCourses(),
         profile: profile({
           degreeLevel: "bachelors",
+          transcriptsSentToCBA: true,
+          examApplicationSubmitted: true,
           examSectionsPassed: ["AUD", "FAR", "REG", "DISC"],
           experienceMonths: 12,
           liveScanDone: true,

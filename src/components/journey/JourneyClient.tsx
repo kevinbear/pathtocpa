@@ -133,6 +133,32 @@ export default function JourneyClient() {
             </div>
           </>
         );
+      case "applySit":
+        return (
+          <div className="mt-3 space-y-2">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                checked={!!profile.transcriptsSentToCBA}
+                onChange={(e) => setProfile({ transcriptsSentToCBA: e.target.checked })}
+              />
+              Official transcripts sent to the CBA
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                checked={!!profile.examApplicationSubmitted}
+                onChange={(e) => setProfile({ examApplicationSubmitted: e.target.checked })}
+              />
+              Submitted the CPA Exam application + fee
+            </label>
+            <p className="text-xs text-slate-400">
+              The CBA verifies your education from these before authorizing you to sit.
+            </p>
+          </div>
+        );
       case "experience":
         return (
           <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
@@ -207,6 +233,12 @@ export default function JourneyClient() {
           </ul>
         )}
         {renderControls(stage)}
+        <Link
+          href={`/journey/${stage.key}`}
+          className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300"
+        >
+          What to do →
+        </Link>
       </div>
     );
   }
@@ -217,8 +249,9 @@ export default function JourneyClient() {
         <span className="pill bg-brand-100 text-brand-800">Journey</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Your Journey</h1>
         <p className="mt-2 max-w-2xl text-slate-600">
-          The real California path: qualify to sit, then the exam and experience run in parallel,
-          then finish your licensure education and apply.
+          The real California path: qualify, then send transcripts to the CBA to be approved to
+          sit; the exam and experience run in parallel; then finish your licensure education and
+          apply for the license. Tap <span className="font-medium">What to do →</span> on any step.
         </p>
       </div>
 
@@ -267,7 +300,12 @@ export default function JourneyClient() {
               <StageCard stage={byKey.qualify} label="Step 1" />
             </li>
 
-            {/* Steps 2 & 3 run concurrently. Exam sits beside its deadline windows. */}
+            <li className="relative">
+              <TimelineDot>📄</TimelineDot>
+              <StageCard stage={byKey.applySit} label="Step 2" />
+            </li>
+
+            {/* Steps 3 & 4 run concurrently. Exam sits beside its deadline windows. */}
             <li className="relative">
               <TimelineDot>
                 <svg
@@ -284,24 +322,24 @@ export default function JourneyClient() {
                 </svg>
               </TimelineDot>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-600">
-                Steps 2 &amp; 3 — these run in parallel
+                Steps 3 &amp; 4 — these run in parallel
               </p>
               <div className="grid items-start gap-6 lg:grid-cols-2">
-                <StageCard stage={byKey.exam} label="Step 2" />
+                <StageCard stage={byKey.exam} label="Step 3" />
                 <ExamWindows />
               </div>
               <div className="mt-6">
-                <StageCard stage={byKey.experience} label="Step 3 · runs alongside the exam" />
+                <StageCard stage={byKey.experience} label="Step 4 · runs alongside the exam" />
               </div>
             </li>
 
             <li className="relative">
               <TimelineDot>📚</TimelineDot>
-              <StageCard stage={byKey.licenseEd} label="Step 4" />
+              <StageCard stage={byKey.licenseEd} label="Step 5" />
             </li>
             <li className="relative">
               <TimelineDot>✅</TimelineDot>
-              <StageCard stage={byKey.license} label="Step 5" />
+              <StageCard stage={byKey.license} label="Step 6" />
             </li>
           </ol>
 
