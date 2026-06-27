@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { STEP_DETAILS, STEP_ORDER } from "@/lib/journey/stepDetails";
 import type { StageKey } from "@/lib/journey/computeJourney";
+import StepChecklist from "@/components/journey/StepChecklist";
 
 export function generateStaticParams() {
   return STEP_ORDER.map((step) => ({ step }));
@@ -36,16 +37,9 @@ export default function JourneyStepPage({ params }: { params: { step: string } }
       <h2 className="mt-10 text-sm font-semibold uppercase tracking-wide text-slate-500">
         What you need to do
       </h2>
-      <ol className="mt-4 space-y-3">
-        {detail.checklist.map((item, i) => (
-          <li key={item} className="card flex items-start gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800">
-              {i + 1}
-            </span>
-            <span className="pt-0.5 text-slate-700">{item}</span>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-4">
+        <StepChecklist stepKey={detail.key} items={detail.checklist} />
+      </div>
 
       {/* Tips */}
       {detail.tips && detail.tips.length > 0 && (

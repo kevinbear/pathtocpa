@@ -56,6 +56,8 @@ export interface Profile {
   liveScanDone?: boolean;
   /** Submitted the CBA license application. */
   licenseSubmitted: boolean;
+  /** IDs of per-step detail-page checklist tasks the user has ticked off (e.g. "applySit:2"). */
+  stepTasksDone?: string[];
 
   // --- CPA review course (optional convenience link, opened from the Journey) ---
   /** Label for the review platform (e.g. "Becker", "UWorld"). */
