@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { STEP_DETAILS, STEP_ORDER } from "@/lib/journey/stepDetails";
 import type { StageKey } from "@/lib/journey/computeJourney";
 import StepChecklist from "@/components/journey/StepChecklist";
+import ExamOrderList from "@/components/journey/ExamOrderList";
 
 export function generateStaticParams() {
   return STEP_ORDER.map((step) => ({ step }));
@@ -23,15 +24,35 @@ export default function JourneyStepPage({ params }: { params: { step: string } }
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href="/journey" className="text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">
-        ← Back to your journey
-      </Link>
-
-      <span className="pill mt-4 inline-block bg-brand-100 text-brand-800">{detail.stepLabel}</span>
-      <h1 className="mt-3 flex items-center gap-3 text-3xl font-bold tracking-tight text-slate-900">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href="/journey"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 dark:text-brand-300"
+        >
+          ← Back to your journey
+        </Link>
+        <span className="pill bg-brand-100 text-brand-800">{detail.stepLabel}</span>
+      </div>
+      <h1 className="mt-4 flex items-center gap-3 text-3xl font-bold tracking-tight text-slate-900">
         <span aria-hidden>{detail.emoji}</span> {detail.title}
       </h1>
       <p className="mt-3 text-slate-600">{detail.what}</p>
+
+      {/* Exam step: the same drag-to-order, check-as-you-pass box from the journey card. */}
+      {detail.key === "exam" && (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Your exam sections
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Drag the ⠿ handle to set your order, and check each section as you pass it — this is
+            the same tracker as on your journey.
+          </p>
+          <div className="card mt-3">
+            <ExamOrderList />
+          </div>
+        </section>
+      )}
 
       {/* What to do — the checklist */}
       <h2 className="mt-10 text-sm font-semibold uppercase tracking-wide text-slate-500">
