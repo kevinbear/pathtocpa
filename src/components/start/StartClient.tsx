@@ -217,7 +217,8 @@ export default function StartClient() {
           There&apos;s more than one road to the license. Today the 150-unit and graduate routes
           apply. Starting <strong>January 1, 2027</strong>, California&apos;s AB 1175 adds a
           120-unit + 2-year route. During 2027–2028 both the old and new rules are valid; from 2029
-          only the new requirements remain.
+          only the new requirements remain. The routes differ only on education and experience —{" "}
+          <strong>every route still requires passing all four sections of the CPA Exam.</strong>
         </p>
         <div className="grid gap-5 md:grid-cols-3">
           {LICENSURE_PATHWAYS.map((p) => (
@@ -247,6 +248,15 @@ export default function StartClient() {
                     Experience
                   </p>
                   <p className="text-slate-700">{p.experience}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Exam
+                  </p>
+                  <p className="text-slate-700">
+                    Pass all four CPA Exam sections (3 Core + 1 Discipline) — required for{" "}
+                    <span className="font-medium">every</span> route.
+                  </p>
                 </div>
                 {p.note && <p className="text-xs text-slate-500">{p.note}</p>}
               </div>
